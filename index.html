@@ -2074,7 +2074,7 @@ function launchMobile(){
 
 // ── DESKTOP BUILDER ────────────────────────────────────────────────────────
 function launchBuilder(){
-  if(!IS_MOBILE){var EX=document.getElementById('_lb_ov');if(EX){EX.remove();var es=document.getElementById('_lb_st');if(es)es.remove();return;}}
+  if(!IS_MOBILE){var EX=document.getElementById('_lb_bx');if(EX){EX.remove();var es=document.getElementById('_lb_st');if(es)es.remove();return;}}
   var currentLBKey=null;
 
   var CSS='#_lb_ov{display:none}'
@@ -2426,7 +2426,7 @@ function launchBuilder(){
   var fab=document.createElement('button');fab.id='_lb_fab';fab.textContent='+';fab.title='New entry (mobile)';
   fab.addEventListener('click',function(e){e.stopPropagation();switchTab('build');addEntry();var entries=eDiv.querySelectorAll('._lb_entry');var last=entries[entries.length-1];if(last){last.scrollIntoView({behavior:'smooth',block:'center'});var inp=last.querySelector('._lb_inp');if(inp)setTimeout(function(){inp.focus();},80);}});
   bx.appendChild(hd);bx.appendChild(bd);bx.appendChild(ft);bx.appendChild(resizeHandle);if(IS_MOBILE)bx.appendChild(fab);
-  if(IS_MOBILE){document.body.appendChild(bx);}else{ov.appendChild(bx);document.body.appendChild(ov);}
+  if(IS_MOBILE){document.body.appendChild(bx);}else{document.body.appendChild(bx);}
 
   var TYPES=['Character','Item','PlotEvent','Location','Other'];
   var TYPE_COLORS={Character:'#818cf8',Item:'#34d399',Location:'#fbbf24',PlotEvent:'#f87171',Other:'#0d9488'};
@@ -3282,14 +3282,11 @@ function launchBuilder(){
   dropZone.addEventListener('drop',function(e){e.preventDefault();e.stopPropagation();dropZone.classList.remove('_drag');if(e.dataTransfer.files[0])handleFile(e.dataTransfer.files[0]);});
 
   xb.addEventListener('click',function(){
-    if(IS_MOBILE){
-      document.getElementById('_lb_bx').remove();
-      var s=document.getElementById('_lb_st');if(s)s.remove();
-      document.getElementById('_lb_install').style.display='';
-    } else {
-      ov.remove();var s=document.getElementById('_lb_st');if(s)s.remove();
-      document.removeEventListener('keydown',hotkeyHandler);
-    }
+    var bxEl=document.getElementById('_lb_bx');
+    if(bxEl)bxEl.remove();
+    var s=document.getElementById('_lb_st');if(s)s.remove();
+    document.getElementById('_lb_install').style.display='';
+    document.removeEventListener('keydown',hotkeyHandler);
   });
   bx.addEventListener('click',function(e){e.stopPropagation();});
 
