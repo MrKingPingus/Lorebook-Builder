@@ -13,6 +13,8 @@ function launchBuilder(){
   +'._lb_tab._on{background:#1f2937;color:#e5e7eb;box-shadow:0 1px 3px rgba(0,0,0,.4)}'
   +'#_lb_xb{background:none;border:none;color:#9ca3af;font-size:1.25rem;cursor:pointer;line-height:1;padding:2px 5px;font-family:system-ui,sans-serif}'
   +'#_lb_xb:hover{color:#f87171}'
+  +'#_lb_scaler{background:none;border:1px solid #374151;border-radius:5px;color:#6b7280;font-size:.72rem;cursor:pointer;line-height:1;padding:3px 7px;font-family:system-ui,sans-serif;white-space:nowrap}'
+  +'#_lb_scaler:hover{border-color:#9ca3af;color:#e5e7eb}'
   +'#_lb_bd{padding:16px;overflow-y:auto;flex:1;min-height:0}'
   +'#_lb_resize{display:none}'
   +'#_lb_resize:hover{color:#9ca3af}'
@@ -30,7 +32,7 @@ function launchBuilder(){
   +'._lb_entry[data-type="Item"]{border-left-color:#34d399}'
   +'._lb_entry[data-type="Location"]{border-left-color:#fbbf24}'
   +'._lb_entry[data-type="PlotEvent"]{border-left-color:#f87171}'
-  +'._lb_entry[data-type="Other"]{border-left-color:#9ca3af}'
+  +'._lb_entry[data-type="Other"]{border-left-color:#0d9488}'
   +'._lb_entry._lb_search_match{outline:2px solid #ef4444}'
   +'._lb_entry._lb_search_dim{opacity:.3}'
   +'._lb_ehead{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px}'
@@ -120,7 +122,19 @@ function launchBuilder(){
   tbr.appendChild(tBuild);tbr.appendChild(tConv);tbr.appendChild(tSaveLoad);tbr.appendChild(tSettings);
   var saveBadge=document.createElement('span');saveBadge.id='_lb_savebadge';saveBadge.textContent='✓ Saved';
   var xb=document.createElement('button');xb.id='_lb_xb';xb.textContent='✕';
-  hr.appendChild(tbr);hr.appendChild(saveBadge);hr.appendChild(xb);
+  var SCALES=[1,0.85,0.7];var scaleIdx=0;
+  var scaler=document.createElement('button');scaler.id='_lb_scaler';scaler.title='Scale builder';scaler.textContent='100%';
+  scaler.addEventListener('click',function(e){
+    e.stopPropagation();
+    scaleIdx=(scaleIdx+1)%SCALES.length;
+    var s=SCALES[scaleIdx];
+    bx.style.transform=s===1?'':'scale('+s+')';
+    bx.style.transformOrigin=s===1?'':'top center';
+    scaler.textContent=Math.round(s*100)+'%';
+    scaler.style.color=s===1?'':'#e5e7eb';
+    scaler.style.borderColor=s===1?'':'#6b7280';
+  });
+  hr.appendChild(tbr);hr.appendChild(saveBadge);hr.appendChild(scaler);hr.appendChild(xb);
   hd.appendChild(ttl);hd.appendChild(hr);
 
   var bd=document.createElement('div');bd.id='_lb_bd';
