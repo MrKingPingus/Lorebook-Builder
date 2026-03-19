@@ -478,9 +478,6 @@ function launchMobile(){
   var restoreNo=document.createElement('button');restoreNo.className='_lbm_restore_btn no';restoreNo.textContent='Discard';
   restoreBtns.appendChild(restoreYes);restoreBtns.appendChild(restoreNo);
   restoreDiv.appendChild(restoreP);restoreDiv.appendChild(restoreBtns);
-  var pendingRestoreMob=null;
-  restoreYes.addEventListener('click',function(){if(pendingRestoreMob){loadState(pendingRestoreMob);}restoreDiv.style.display='none';pendingRestoreMob=null;});
-  restoreNo.addEventListener('click',function(){restoreDiv.style.display='none';pendingRestoreMob=null;updateEmpty();});
 
   var nameRow=document.createElement('div');nameRow.id='_lbm_name_row';
   var nameLbl=document.createElement('span');nameLbl.className='_lbm_name_label';nameLbl.textContent='Lorebook Name';
@@ -2233,9 +2230,6 @@ function launchBuilder(){
   var restoreNo=document.createElement('button');restoreNo.className='_lb_btn _lb_btns';restoreNo.style.padding='5px 12px';restoreNo.textContent='Discard';
   restoreActions.appendChild(restoreYes);restoreActions.appendChild(restoreNo);
   restoreBanner.appendChild(restoreMsg);restoreBanner.appendChild(restoreActions);
-  var pendingRestore=null;
-  restoreYes.addEventListener('click',function(){if(pendingRestore){loadState(pendingRestore);}restoreBanner.style.display='none';pendingRestore=null;});
-  restoreNo.addEventListener('click',function(){restoreBanner.style.display='none';pendingRestore=null;addEntry();});
   var nw=document.createElement('div');nw.style.marginBottom='14px';
   var nl=document.createElement('label');nl.className='_lb_lbl';nl.textContent='Lorebook Name';
   var ni=document.createElement('input');ni.type='text';ni.id='_lb_nm';ni.className='_lb_inp';ni.placeholder='My Lorebook';
@@ -2490,6 +2484,8 @@ function launchBuilder(){
     }catch(e){}
   }
   function scheduleSave(){clearTimeout(saveTimer);saveTimer=setTimeout(saveNow,900);}
+  window.addEventListener('beforeunload',function(){saveNow();});
+  document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden')saveNow();});
   function updLBCount(){
     var idx=lbIndex();
     var el=document.getElementById('_lb_lb_count');
