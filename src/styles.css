@@ -1,0 +1,26 @@
+*{box-sizing:border-box;-webkit-text-size-adjust:100%}
+html,body{margin:0;padding:0;width:100%;overflow-x:hidden}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#111827;color:#e0e0e0}
+#_lb_install{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:2rem;width:100%}
+.card{background:#1f2937;border:1px solid #374151;border-radius:14px;padding:2.5rem;max-width:640px;width:100%;min-width:0}
+h1{margin:0 0 .4rem;font-size:1.4rem;color:#f87171}
+p{color:#9ca3af;margin:0 0 1.2rem;font-size:.9rem;line-height:1.5}
+
+.steps{background:#111827;border-radius:8px;padding:1rem 1.25rem;margin-top:1.5rem}
+.stitle{margin:0 0 .5rem;color:#f87171;font-weight:600;font-size:.85rem;text-transform:uppercase;letter-spacing:.05em}
+ol{margin:0;padding-left:1.2rem}
+li{color:#d1d5db;font-size:.87rem;margin:.35rem 0}
+code{background:#374151;padding:1px 5px;border-radius:4px;font-size:.85em}
+.dlrow{display:flex;gap:10px;margin:1rem 0;flex-wrap:wrap}
+.dlbtn{padding:.5rem 1rem;border-radius:7px;border:1px solid #374151;background:#1f2937;color:#9ca3af;cursor:pointer;font-size:.85rem;text-decoration:none;display:inline-block}
+.dlbtn:hover{border-color:#ef4444;color:#f87171}
+.sec-title{color:#f87171;font-weight:600;font-size:.85rem;text-transform:uppercase;letter-spacing:.05em;margin:0 0 .4rem}
+#_lb_mobile_open{display:none;width:100%;padding:16px;background:#ef4444;border:none;color:#fff;font-size:1.1rem;font-weight:600;border-radius:10px;cursor:pointer;margin-top:1rem;font-family:inherit}#bm{display:inline-block;background:#ef4444;color:#fff;padding:.7rem 1.4rem;border-radius:8px;text-decoration:none;font-size:1rem;font-weight:600;border:2px dashed rgba(255,255,255,.4);cursor:grab}
+#bm:hover{background:#dc2626}
+#_lb_desk_open{display:none;width:100%;padding:16px;background:#ef4444;border:none;color:#fff;font-size:1.1rem;font-weight:600;border-radius:10px;cursor:pointer;margin-top:1rem;font-family:inherit}#_lb_desk_open:hover{background:#dc2626}
+@media(max-width:700px){
+  #_lb_install{padding:1.2rem;align-items:flex-start}
+  .card{padding:1.5rem;border-radius:10px}
+  #bm{display:none}
+  #_lb_mobile_open{display:block}
+}
