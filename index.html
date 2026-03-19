@@ -587,10 +587,18 @@ function launchMobile(){
   var lsh=document.createElement('h3');lsh.textContent='Load — continue a previous lorebook';
   var lsp=document.createElement('p');lsp.textContent='Paste a previously exported JSON to pick up where you left off.';
   var jin=document.createElement('textarea');jin.className='_lbm_ta_mono';jin.placeholder='Paste lorebook JSON here...';
+  var jsonFileInp=document.createElement('input');jsonFileInp.type='file';jsonFileInp.accept='.json';jsonFileInp.style.display='none';
+  var uploadJsonBtn=document.createElement('button');uploadJsonBtn.className='_lbm_btn';uploadJsonBtn.textContent='⬆ Upload .json file';
+  uploadJsonBtn.addEventListener('click',function(){jsonFileInp.click();});
+  jsonFileInp.addEventListener('change',function(){
+    var file=jsonFileInp.files[0];if(!file)return;
+    var r=new FileReader();r.onload=function(ev){jin.value=ev.target.result;};
+    r.readAsText(file);jsonFileInp.value='';
+  });
   var loadBtn=document.createElement('button');loadBtn.className='_lbm_btn primary';loadBtn.textContent='Load Lorebook';
   var jerr=document.createElement('div');jerr.className='_lbm_jerr';
   var clearBtn=document.createElement('button');clearBtn.className='_lbm_btn';clearBtn.style.marginTop='8px';clearBtn.textContent='Clear All & Start Fresh';
-  loadSec.appendChild(lsh);loadSec.appendChild(lsp);loadSec.appendChild(jin);loadSec.appendChild(loadBtn);loadSec.appendChild(jerr);loadSec.appendChild(clearBtn);
+  loadSec.appendChild(lsh);loadSec.appendChild(lsp);loadSec.appendChild(uploadJsonBtn);loadSec.appendChild(jsonFileInp);loadSec.appendChild(jin);loadSec.appendChild(loadBtn);loadSec.appendChild(jerr);loadSec.appendChild(clearBtn);
 
   pSave.appendChild(saveSec);pSave.appendChild(exportSec);pSave.appendChild(loadSec);
 
@@ -637,6 +645,10 @@ function launchMobile(){
     var saved_sc=localStorage.getItem('_lbm_sugs_collapsed');
     window._lbm_sugs_collapsed=(saved_sc==='1');
   }catch(e){window._lbm_sugs_collapsed=false;}
+  try{
+    var saved_hs=localStorage.getItem('_lbm_hide_stats');
+    window._lbm_hide_stats=(saved_hs==='1');
+  }catch(e){window._lbm_hide_stats=false;}
 
   setScroll.appendChild(mkToggle(
     'Tiered character counter',
@@ -654,6 +666,12 @@ function launchMobile(){
     'Hide suggestions by default',
     'Start with the Trigger Word Suggestions tray collapsed. You can still expand it manually per entry.',
     '_lbm_sugs_collapsed',
+    false
+  ));
+  setScroll.appendChild(mkToggle(
+    'Hide entry stats',
+    'Hide the trigger count and character count shown on each entry.',
+    '_lbm_hide_stats',
     false
   ));
 
@@ -942,7 +960,9 @@ function launchMobile(){
       saveBadge._t=setTimeout(function(){saveBadge.classList.remove('show');},1800);
     }catch(e){}
   }
-  function scheduleSave(){clearTimeout(saveTimer);saveTimer=setTimeout(saveNow,900);}
+  function scheduleSave(){clearTimeout(saveTimer);saveTimer=setTimeout(saveNow,400);}
+  window.addEventListener('beforeunload',function(){saveNow();});
+  document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden')saveNow();});
   function updLBBtn(){var idx=lbIndex();var el=document.getElementById('_lbm_lb_count');if(el)el.textContent=idx.length;}
 
   function mkEntry(data){
@@ -1002,6 +1022,7 @@ function launchMobile(){
     cbody.appendChild(cnum);cbody.appendChild(cname);cbody.appendChild(ctype);
 
     var cstats=document.createElement('div');cstats.className='_lbm_card_stats';
+    cstats.style.display=window._lbm_hide_stats?'none':'';
     cstats.appendChild(mkStatEl(e.triggers.length,25,'trg'));
     cstats.appendChild(mkStatEl((e.description||'').length,1500,'chr'));
 
@@ -1024,6 +1045,7 @@ function launchMobile(){
     card._name.className='_lbm_card_name'+(e.name?'':' empty');
     card._type.textContent=e.type;
     if(card._stats){
+      card._stats.style.display=window._lbm_hide_stats?'none':'';
       card._stats.innerHTML='';
       card._stats.appendChild(mkStatEl(e.triggers.length,25,'trg'));
       card._stats.appendChild(mkStatEl((e.description||'').length,1500,'chr'));
@@ -2324,8 +2346,16 @@ function launchBuilder(){
   var loadDesc=document.createElement('p');loadDesc.className='_lb_section_desc';loadDesc.textContent='Paste a lorebook JSON you exported before. This will replace your current work — export first if you need to keep it.';
   var jin=document.createElement('textarea');jin.id='_lb_jin';jin.placeholder='Paste your previously exported lorebook JSON here...';
   var jerr=document.createElement('div');jerr.className='_lb_jerr';
+  var deskJsonFileInp=document.createElement('input');deskJsonFileInp.type='file';deskJsonFileInp.accept='.json';deskJsonFileInp.style.display='none';
+  var deskUploadJsonBtn=document.createElement('button');deskUploadJsonBtn.className='_lb_btn _lb_btns';deskUploadJsonBtn.textContent='⬆ Upload .json file';
+  deskUploadJsonBtn.addEventListener('click',function(e){e.stopPropagation();deskJsonFileInp.click();});
+  deskJsonFileInp.addEventListener('change',function(){
+    var file=deskJsonFileInp.files[0];if(!file)return;
+    var r=new FileReader();r.onload=function(ev){jin.value=ev.target.result;};
+    r.readAsText(file);deskJsonFileInp.value='';
+  });
   var ibtn=document.createElement('button');ibtn.className='_lb_btn _lb_btnp';ibtn.textContent='Load Lorebook';ibtn.style.marginTop='8px';
-  loadBox.appendChild(loadLabel);loadBox.appendChild(loadDesc);loadBox.appendChild(jin);loadBox.appendChild(jerr);loadBox.appendChild(ibtn);
+  loadBox.appendChild(loadLabel);loadBox.appendChild(loadDesc);loadBox.appendChild(deskUploadJsonBtn);loadBox.appendChild(deskJsonFileInp);loadBox.appendChild(jin);loadBox.appendChild(jerr);loadBox.appendChild(ibtn);
 
   var okSp=document.createElement('span');okSp.id='_lb_ok';okSp.style.cssText='font-size:.78rem;color:#34d399;opacity:0;transition:opacity .3s;font-family:system-ui,sans-serif';okSp.textContent='Copied!';
 
@@ -2360,10 +2390,12 @@ function launchBuilder(){
   try{var s_tc=localStorage.getItem('_lb_tiered_counter');window._lb_tiered_counter=(s_tc===null)?true:(s_tc==='1');}catch(e){window._lb_tiered_counter=true;}
   try{var s_ct=localStorage.getItem('_lb_compact_triggers');window._lb_compact_triggers=(s_ct==='1');}catch(e){window._lb_compact_triggers=false;}
   try{var s_sc=localStorage.getItem('_lb_sugs_collapsed');window._lb_sugs_collapsed=(s_sc==='1');}catch(e){window._lb_sugs_collapsed=false;}
+  try{var s_hs=localStorage.getItem('_lb_hide_stats');window._lb_hide_stats=(s_hs==='1');}catch(e){window._lb_hide_stats=false;}
 
   setBox.appendChild(mkDeskToggle('Tiered character counter','Green 0–750 · Yellow 750–1250 · Red 1250–1500. Turn off for a simple red-at-1500 warning.','_lb_tiered_counter'));
   setBox.appendChild(mkDeskToggle('Compact trigger input','Use a single text field for triggers instead of individual tag chips.','_lb_compact_triggers'));
   setBox.appendChild(mkDeskToggle('Hide suggestions by default','Start with the Trigger Word Suggestions tray collapsed.','_lb_sugs_collapsed'));
+  setBox.appendChild(mkDeskToggle('Hide entry stats','Hide the trigger count and character count from collapsed entry headers.','_lb_hide_stats'));
   pSettings.appendChild(setBox);
 
   bd.appendChild(pBuild);bd.appendChild(pConv);bd.appendChild(pSaveLoad);bd.appendChild(pSettings);
@@ -2479,7 +2511,7 @@ function launchBuilder(){
     }
     var typeDot=document.createElement('span');typeDot.className='_lb_type_dot';
     var enumEl=document.createElement('span');enumEl.className='_lb_enum';
-    var eStatWrap=document.createElement('span');eStatWrap.style.cssText='display:flex;gap:6px;align-items:center;padding:4px 0 2px;';
+    var eStatWrap=document.createElement('span');eStatWrap.style.cssText='display:flex;gap:6px;align-items:center;flex-shrink:0;margin-left:8px;';
     var eStat1=document.createElement('span');eStat1.style.cssText='font-size:.65rem;font-weight:600;color:#34d399;white-space:nowrap';
     var eStat2=document.createElement('span');eStat2.style.cssText='font-size:.65rem;font-weight:600;color:#34d399;white-space:nowrap';
     eStatWrap.appendChild(eStat1);eStatWrap.appendChild(eStat2);
@@ -2488,8 +2520,11 @@ function launchBuilder(){
     var delBtn=document.createElement('button');delBtn.className='_lb_ebtn';delBtn.textContent='Remove';
     ebtns.appendChild(colBtn);ebtns.appendChild(delBtn);
     eleft.appendChild(dragHandle);eleft.appendChild(typeDot);eleft.appendChild(enumEl);
-    ehead.appendChild(eleft);ehead.appendChild(ebtns);
+    ehead.appendChild(eleft);ehead.appendChild(eStatWrap);ehead.appendChild(ebtns);
     function updStats(){
+      var hide=window._lb_hide_stats;
+      eStatWrap.style.display=hide?'none':'flex';
+      if(hide)return;
       var tc=el._triggers?el._triggers.length:0;
       var dc=el._gd?el._gd().description.length:0;
       function sc(v,max){return v>=max?'#ef4444':v>=max*.8?'#f59e0b':'#34d399';}
@@ -2797,7 +2832,7 @@ function launchBuilder(){
     grid.appendChild(fld('Entry Type',typeS));
     grid.appendChild(trigFieldWrap);
     grid.appendChild(descWrap);
-    ebody.insertBefore(eStatWrap, grid);
+    ebody.appendChild(grid);
     el.appendChild(ehead);el.appendChild(ebody);
 
     el._gd=function(){
@@ -3029,7 +3064,7 @@ function launchBuilder(){
   var lbSwitchBtn=document.createElement('button');
   lbSwitchBtn.id='_lb_lb_switcher';
   lbSwitchBtn.style.cssText='background:none;border:1px solid #374151;border-radius:6px;color:#9ca3af;font-size:.72rem;cursor:pointer;padding:4px 9px;font-family:system-ui,sans-serif;display:flex;align-items:center;gap:4px;white-space:nowrap;flex-shrink:0';
-  lbSwitchBtn.innerHTML='\U0001f4da <span id="_lb_lb_count"></span>';
+  lbSwitchBtn.innerHTML='📚 <span id="_lb_lb_count"></span>';
   lbSwitchBtn.title='Switch lorebook';
   hr.insertBefore(lbSwitchBtn,hr.firstChild);
   updLBCount();
