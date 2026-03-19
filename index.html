@@ -37,7 +37,7 @@ code{background:#374151;padding:1px 5px;border-radius:4px;font-size:.85em}
 <div id="_lb_install">
   <div class="card">
     <h1>📖 Lorebook Builder</h1>
-    <p id="_lb_p_desk">Click the button below to open the builder. Bookmark this page to come back anytime — your lorebooks autosave here automatically.</p>
+    <p id="_lb_p_desk">Drag the button to your bookmarks bar. Click it on any page to open the editor. Or open this file directly and click the button below.</p>
     <p id="_lb_p_mob" style="display:none">Tap the button below to open the builder. Bookmark this page to come back anytime — your work autosaves here automatically.</p>
     <a id="bm" href="#">📖 Lorebook Builder</a>
     <button id="_lb_mobile_open">📖 Open Lorebook Builder</button>
@@ -78,9 +78,6 @@ if(IS_MOBILE){
   document.getElementById('_lb_step_mob').style.display='';
 } else {
   document.getElementById('_lb_desk_open').style.display='block';
-  document.getElementById('bm').style.display='none';
-  document.getElementById('_lb_step_desk1').style.display='none';
-  document.getElementById('_lb_step_desk2').style.display='none';
 }
 
 document.getElementById('dl-txt').addEventListener('click',function(e){
@@ -230,7 +227,7 @@ function launchMobile(){
   if(document.getElementById('_lbm_app'))return;
 
   var TYPES=['Character','Item','PlotEvent','Location','Other'];
-  var TYPE_COLORS={Character:'#818cf8',Item:'#34d399',Location:'#fbbf24',PlotEvent:'#f87171',Other:'#9ca3af'};
+  var TYPE_COLORS={Character:'#818cf8',Item:'#34d399',Location:'#fbbf24',PlotEvent:'#f87171',Other:'#0d9488'};
   var TYPE_BG={Character:'#1e1b4b',Item:'#052e16',Location:'#1c1200',PlotEvent:'#2d0a0a',Other:'#1a1a1a'};
 
   var CSS=[
@@ -288,7 +285,7 @@ function launchMobile(){
     '._lbm_fbtn[data-t="Item"].on{background:#059669}',
     '._lbm_fbtn[data-t="Location"].on{background:#d97706}',
     '._lbm_fbtn[data-t="PlotEvent"].on{background:#dc2626}',
-    '._lbm_fbtn[data-t="Other"].on{background:#475569}',
+    '._lbm_fbtn[data-t="Other"].on{background:#0d9488}',
     '#_lbm_entries{padding:0 12px 100px}',
     '._lbm_card{display:flex;align-items:center;background:#1e293b;border-radius:10px;margin-bottom:8px;overflow:hidden;cursor:pointer;border:1px solid #334155;transition:border-color .15s;-webkit-user-select:none}',
     '._lbm_card:active{background:#263548}',
@@ -332,7 +329,7 @@ function launchMobile(){
     '._lbm_typebtn[data-t="Item"].sel{background:#059669}',
     '._lbm_typebtn[data-t="Location"].sel{background:#d97706}',
     '._lbm_typebtn[data-t="PlotEvent"].sel{background:#dc2626}',
-    '._lbm_typebtn[data-t="Other"].sel{background:#475569}',
+    '._lbm_typebtn[data-t="Other"].sel{background:#0d9488}',
     '#_lbm_delim_row{display:flex;gap:8px;margin-top:8px}',
     '._lbm_delimbtn{flex:1;padding:8px;border-radius:8px;border:1px solid #334155;background:#1e293b;color:#64748b;font-size:.8rem;cursor:pointer;font-family:system-ui,sans-serif;text-align:center}',
     '._lbm_delimbtn.sel{background:#1e293b;border-color:#f87171;color:#f87171}',
@@ -2080,9 +2077,9 @@ function launchBuilder(){
   if(!IS_MOBILE){var EX=document.getElementById('_lb_ov');if(EX){EX.remove();var es=document.getElementById('_lb_st');if(es)es.remove();return;}}
   var currentLBKey=null;
 
-  var CSS='#_lb_ov{position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,.82);z-index:2147483647;pointer-events:none}'
-  +'#_lb_bx{position:fixed;top:40px;left:50%;transform:translateX(-50%);background:#1f2937;border:1px solid #4b5563;border-radius:14px;width:860px;max-width:calc(100vw - 40px);min-width:420px;height:680px;min-height:300px;max-height:calc(100vh - 60px);display:flex;flex-direction:column;font-family:system-ui,sans-serif;color:#e5e7eb;overflow:hidden;pointer-events:all;box-sizing:border-box}'
-  +'#_lb_hd{background:#111827;padding:13px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #374151;cursor:move;user-select:none;flex-shrink:0}'
+  var CSS='#_lb_ov{display:none}'
+  +'#_lb_bx{position:fixed;top:0;left:0;width:100vw;height:100vh;background:#1f2937;border:none;border-radius:0;display:flex;flex-direction:column;font-family:system-ui,sans-serif;color:#e5e7eb;overflow:hidden;pointer-events:all;box-sizing:border-box}'
+  +'#_lb_hd{background:#111827;padding:13px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #374151;flex-shrink:0}'
   +'#_lb_hd h2{margin:0;font-size:.95rem;color:#f87171;letter-spacing:.07em;pointer-events:none}'
   +'._lb_tabbar{display:flex;background:#0d1520;border-radius:8px;padding:3px;gap:2px;border:1px solid #1f2d40}'
   +'._lb_tab{padding:5px 13px;border-radius:6px;border:none;background:transparent;color:#6b7280;cursor:pointer;font-size:.78rem;font-family:system-ui,sans-serif;transition:color .15s}'
@@ -2091,7 +2088,7 @@ function launchBuilder(){
   +'#_lb_xb{background:none;border:none;color:#9ca3af;font-size:1.25rem;cursor:pointer;line-height:1;padding:2px 5px;font-family:system-ui,sans-serif}'
   +'#_lb_xb:hover{color:#f87171}'
   +'#_lb_bd{padding:16px;overflow-y:auto;flex:1;min-height:0}'
-  +'#_lb_resize{position:absolute;bottom:0;right:0;width:18px;height:18px;cursor:se-resize;display:flex;align-items:flex-end;justify-content:flex-end;padding:3px;color:#4b5563;font-size:11px;line-height:1;user-select:none}'
+  +'#_lb_resize{display:none}'
   +'#_lb_resize:hover{color:#9ca3af}'
   +'#_lb_hotkey_hint{font-size:.68rem;color:#374151;margin-left:8px;flex-shrink:0}'
   +'._lb_pnl{display:none}'
@@ -2119,7 +2116,7 @@ function launchBuilder(){
   +'._lb_grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}'
   +'._lb_full{grid-column:1/-1}'
   +'._lb_hint{font-size:.7rem;color:#4b5563;margin-top:2px}'
-  +'._lb_cc{font-size:.7rem;text-align:right;margin-top:2px;color:#4b5563}'
+  +'._lb_cc{font-size:.7rem;text-align:left;margin-top:2px;color:#4b5563}'
   +'._lb_cc._good{color:#34d399}'
   +'._lb_cc._warn{color:#f59e0b;font-weight:500}'
   +'._lb_cc._over{color:#ef4444;font-weight:700}'
@@ -2173,7 +2170,7 @@ function launchBuilder(){
   +'._lb_fbtn[data-type="Item"]._on{background:#059669}'
   +'._lb_fbtn[data-type="Location"]._on{background:#d97706}'
   +'._lb_fbtn[data-type="PlotEvent"]._on{background:#dc2626}'
-  +'._lb_fbtn[data-type="Other"]._on{background:#6b7280}'
+  +'._lb_fbtn[data-type="Other"]._on{background:#0d9488}'
   +'#_lb_searchrow{display:flex;gap:6px;margin-bottom:10px}'
   +'#_lb_search{flex:1;background:#111827;border:1px solid #374151;border-radius:6px;color:#e5e7eb;padding:6px 10px;font-size:.83rem;outline:none;font-family:system-ui,sans-serif}'
   +'#_lb_search:focus{border-color:#ef4444}'
@@ -2432,7 +2429,7 @@ function launchBuilder(){
   if(IS_MOBILE){document.body.appendChild(bx);}else{ov.appendChild(bx);document.body.appendChild(ov);}
 
   var TYPES=['Character','Item','PlotEvent','Location','Other'];
-  var TYPE_COLORS={Character:'#818cf8',Item:'#34d399',Location:'#fbbf24',PlotEvent:'#f87171',Other:'#9ca3af'};
+  var TYPE_COLORS={Character:'#818cf8',Item:'#34d399',Location:'#fbbf24',PlotEvent:'#f87171',Other:'#0d9488'};
   var saveTimer=null;
 
   function getState(){
@@ -3296,33 +3293,9 @@ function launchBuilder(){
   });
   bx.addEventListener('click',function(e){e.stopPropagation();});
 
-  hd.addEventListener('mousedown',function(e){
-    if(e.target===xb||e.target.closest('._lb_tabbar'))return;
-    e.preventDefault();
-    var rect=bx.getBoundingClientRect();
-    var ox=e.clientX-rect.left;var oy=e.clientY-rect.top;
-    bx.style.transform='none';
-    function onMove(e){
-      bx.style.left=Math.max(0,Math.min(window.innerWidth-rect.width,e.clientX-ox))+'px';
-      bx.style.top=Math.max(0,Math.min(window.innerHeight-60,e.clientY-oy))+'px';
-    }
-    function onUp(){document.removeEventListener('mousemove',onMove);document.removeEventListener('mouseup',onUp);}
-    document.addEventListener('mousemove',onMove);document.addEventListener('mouseup',onUp);
-  });
 
-  resizeHandle.addEventListener('mousedown',function(e){
-    e.preventDefault();e.stopPropagation();
-    var startX=e.clientX;var startY=e.clientY;
-    var startW=bx.offsetWidth;var startH=bx.offsetHeight;
-    function onMove(e){
-      var newW=Math.max(420,startW+(e.clientX-startX));
-      var newH=Math.max(300,Math.min(window.innerHeight-60,startH+(e.clientY-startY)));
-      bx.style.width=newW+'px';
-      bx.style.height=newH+'px';
-    }
-    function onUp(){document.removeEventListener('mousemove',onMove);document.removeEventListener('mouseup',onUp);}
-    document.addEventListener('mousemove',onMove);document.addEventListener('mouseup',onUp);
-  });
+
+
 
   function hotkeyHandler(e){
     if(e.altKey&&e.key==='n'&&document.getElementById('_lb_ov')){
