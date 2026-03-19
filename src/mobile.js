@@ -94,7 +94,10 @@ function launchMobile(){
     '._lbm_label{display:block;font-size:.72rem;color:#64748b;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}',
     '._lbm_inp,._lbm_ta{width:100%;background:#1e293b;border:1px solid #334155;border-radius:8px;color:#e5e7eb;padding:12px;font-size:16px;outline:none;font-family:system-ui,sans-serif}',
     '._lbm_inp:focus,._lbm_ta:focus{border-color:#f87171}',
-    '._lbm_ta{resize:none;min-height:120px;line-height:1.6}',
+    '._lbm_ta{resize:none;min-height:120px;line-height:1.6;overflow:hidden}',
+    '._lbm_ta_tab{display:flex;justify-content:center;align-items:center;cursor:ns-resize;padding:4px 0;user-select:none;touch-action:none}',
+    '._lbm_ta_tab::before{content:"";width:40px;height:4px;background:#334155;border-radius:2px;transition:background .15s}',
+    '._lbm_ta_tab:active::before{background:#64748b}',
     '._lbm_cc{font-size:.72rem;text-align:right;margin-top:4px;color:#475569}',
     '._lbm_cc.warn{color:#f59e0b}',
     '._lbm_cc.over{color:#ef4444;font-weight:700}',
@@ -1326,6 +1329,18 @@ function launchMobile(){
 
     var descTA=document.createElement('textarea');descTA.className='_lbm_ta';
     descTA.placeholder='Describe this entry...';descTA.value=e.description;
+    function autoGrow(){descTA.style.height='auto';descTA.style.height=Math.max(descTA._minH||120,descTA.scrollHeight)+'px';}
+    setTimeout(autoGrow,0);
+    var descTab=document.createElement('div');descTab.className='_lbm_ta_tab';
+    function startTabDrag(startY,startH){
+      function mv(y){var h=Math.max(120,startH+(y-startY));descTA._minH=h;descTA.style.height=h+'px';}
+      function onMm(e){mv(e.clientY);}
+      function onTm(e){if(e.touches[0])mv(e.touches[0].clientY);}
+      function done(){document.removeEventListener('mousemove',onMm);document.removeEventListener('mouseup',done);document.removeEventListener('touchmove',onTm);document.removeEventListener('touchend',done);}
+      document.addEventListener('mousemove',onMm);document.addEventListener('mouseup',done);document.addEventListener('touchmove',onTm,{passive:false});document.addEventListener('touchend',done);
+    }
+    descTab.addEventListener('mousedown',function(e){e.preventDefault();startTabDrag(e.clientY,descTA.offsetHeight);});
+    descTab.addEventListener('touchstart',function(e){e.preventDefault();if(e.touches[0])startTabDrag(e.touches[0].clientY,descTA.offsetHeight);},{passive:false});
     var cc=document.createElement('div');cc.className='_lbm_cc';
     function updCC(){
       var n=descTA.value.length;
@@ -1337,10 +1352,10 @@ function launchMobile(){
       }
     }
     updCC();
-    descTA.addEventListener('input',function(){e.description=descTA.value.trim();updCC();sugOffset=0;renderSugs();scheduleSave();});
+    descTA.addEventListener('input',function(){autoGrow();e.description=descTA.value.trim();updCC();sugOffset=0;renderSugs();scheduleSave();});
     var descWrap=document.createElement('div');descWrap.className='_lbm_field';
     var descLbl=document.createElement('label');descLbl.className='_lbm_label';descLbl.textContent='Description (1500 char limit)';
-    descWrap.appendChild(descLbl);descWrap.appendChild(descTA);descWrap.appendChild(cc);
+    descWrap.appendChild(descLbl);descWrap.appendChild(descTA);descWrap.appendChild(descTab);descWrap.appendChild(cc);
     edBody.appendChild(descWrap);
 
     var moveRow=document.createElement('div');moveRow.id='_lbm_move_row';
