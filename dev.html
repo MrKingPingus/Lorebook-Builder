@@ -1622,7 +1622,6 @@ function launchMobile(){
     app.remove();
     var s=document.getElementById('_lbm_st');if(s)s.remove();
     document.getElementById('_lb_install').style.display='';
-    localStorage.removeItem('_lb_last_mode');
   });
 
   function buildJSON(){
@@ -3325,7 +3324,6 @@ function launchBuilder(){
     var s=document.getElementById('_lb_st');if(s)s.remove();
     document.getElementById('_lb_install').style.display='';
     document.removeEventListener('keydown',hotkeyHandler);
-    localStorage.removeItem('_lb_last_mode');
   });
   bx.addEventListener('click',function(e){e.stopPropagation();});
 
@@ -3347,28 +3345,14 @@ function launchBuilder(){
 }
 
 document.getElementById('_lb_mobile_open').addEventListener('click',function(){
-  localStorage.setItem('_lb_last_mode','mobile');
   document.getElementById('_lb_install').style.display='none';
   launchMobile();
 });
 
 document.getElementById('_lb_desk_open').addEventListener('click',function(){
-  localStorage.setItem('_lb_last_mode','desktop');
   document.getElementById('_lb_install').style.display='none';
   launchBuilder();
 });
-
-// Auto-launch if user has previously chosen a mode
-(function(){
-  var _lastMode=localStorage.getItem('_lb_last_mode');
-  if(_lastMode==='mobile'){
-    document.getElementById('_lb_install').style.display='none';
-    launchMobile();
-  } else if(_lastMode==='desktop'){
-    document.getElementById('_lb_install').style.display='none';
-    launchBuilder();
-  }
-})();
 
 // Build bookmarklet from pre-assembled payload
 if(!IS_MOBILE){
