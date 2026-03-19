@@ -226,6 +226,7 @@ function lbEnsureKey(currentKey){
 function launchMobile(){
   if(document.getElementById('_lbm_app'))return;
 
+  var currentLBKey=null;
   var TYPES=['Character','Item','PlotEvent','Location','Other'];
   var TYPE_COLORS={Character:'#818cf8',Item:'#34d399',Location:'#fbbf24',PlotEvent:'#f87171',Other:'#0d9488'};
   var TYPE_BG={Character:'#1e1b4b',Item:'#052e16',Location:'#1c1200',PlotEvent:'#2d0a0a',Other:'#1a1a1a'};
@@ -2002,7 +2003,7 @@ function launchMobile(){
   currentLBKey=lbEnsureKey(currentLBKey);updLBBtn();
   try{
     var saved=localStorage.getItem(currentLBKey);
-    if(saved){var parsed=JSON.parse(saved);if(parsed.name||(parsed.entries&&parsed.entries.length>0)){pendingRestoreMob=parsed;restoreP.textContent='Resume \u201c'+(parsed.name||'Untitled')+'\u201d ('+(parsed.entries&&parsed.entries.length||0)+' entries)?';restoreDiv.style.display='';}else{updateEmpty();}}
+    if(saved){var parsed=JSON.parse(saved);if(parsed.name||(parsed.entries&&parsed.entries.length>0)){loadState(parsed);}else{updateEmpty();}}
     else{updateEmpty();}
   }catch(e){updateEmpty();}
 
@@ -3061,7 +3062,7 @@ function launchBuilder(){
     var saved=currentLBKey&&localStorage.getItem(currentLBKey);
     if(saved){
       var parsed=JSON.parse(saved);
-      if(parsed.name||(parsed.entries&&parsed.entries.length>0)){pendingRestore=parsed;restoreMsg.textContent='Resume \u201c'+(parsed.name||'Untitled')+'\u201d ('+(parsed.entries&&parsed.entries.length||0)+' entries)?';restoreBanner.style.display='';}
+      if(parsed.name||(parsed.entries&&parsed.entries.length>0)){loadState(parsed);}
       else{addEntry();}
     } else {addEntry();}
   }catch(e){addEntry();}

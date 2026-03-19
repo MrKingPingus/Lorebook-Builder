@@ -226,6 +226,7 @@ function lbEnsureKey(currentKey){
 function launchMobile(){
   if(document.getElementById('_lbm_app'))return;
 
+  var currentLBKey=null;
   var TYPES=['Character','Item','PlotEvent','Location','Other'];
   var TYPE_COLORS={Character:'#818cf8',Item:'#34d399',Location:'#fbbf24',PlotEvent:'#f87171',Other:'#0d9488'};
   var TYPE_BG={Character:'#1e1b4b',Item:'#052e16',Location:'#1c1200',PlotEvent:'#2d0a0a',Other:'#1a1a1a'};
