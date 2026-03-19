@@ -13,6 +13,17 @@ function launchBuilder(){
   +'._lb_tab._on{background:#1f2937;color:#e5e7eb;box-shadow:0 1px 3px rgba(0,0,0,.4)}'
   +'#_lb_xb{background:none;border:none;color:#9ca3af;font-size:1.25rem;cursor:pointer;line-height:1;padding:2px 5px;font-family:system-ui,sans-serif}'
   +'#_lb_xb:hover{color:#f87171}'
+  +'._lb_corner{position:absolute;width:18px;height:18px;z-index:10}'
+  +'._lb_corner._tl{top:0;left:0;cursor:nw-resize}'
+  +'._lb_corner._tr{top:0;right:0;cursor:ne-resize}'
+  +'._lb_corner._bl{bottom:0;left:0;cursor:sw-resize}'
+  +'._lb_corner._br{bottom:0;right:0;cursor:se-resize}'
+  +'._lb_corner::after{content:"";position:absolute;width:8px;height:8px;border-color:#4b5563;border-style:solid;border-width:0}'
+  +'._lb_corner._tl::after{top:4px;left:4px;border-top-width:2px;border-left-width:2px;border-radius:1px 0 0 0}'
+  +'._lb_corner._tr::after{top:4px;right:4px;border-top-width:2px;border-right-width:2px;border-radius:0 1px 0 0}'
+  +'._lb_corner._bl::after{bottom:4px;left:4px;border-bottom-width:2px;border-left-width:2px;border-radius:0 0 0 1px}'
+  +'._lb_corner._br::after{bottom:4px;right:4px;border-bottom-width:2px;border-right-width:2px;border-radius:0 0 1px 0}'
+  +'._lb_corner:hover::after{border-color:#9ca3af}'
   +'#_lb_bd{padding:16px;overflow-y:auto;flex:1;min-height:0}'
   +'#_lb_resize{display:none}'
   +'#_lb_resize:hover{color:#9ca3af}'
@@ -30,7 +41,7 @@ function launchBuilder(){
   +'._lb_entry[data-type="Item"]{border-left-color:#34d399}'
   +'._lb_entry[data-type="Location"]{border-left-color:#fbbf24}'
   +'._lb_entry[data-type="PlotEvent"]{border-left-color:#f87171}'
-  +'._lb_entry[data-type="Other"]{border-left-color:#9ca3af}'
+  +'._lb_entry[data-type="Other"]{border-left-color:#0d9488}'
   +'._lb_entry._lb_search_match{outline:2px solid #ef4444}'
   +'._lb_entry._lb_search_dim{opacity:.3}'
   +'._lb_ehead{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px}'
@@ -361,6 +372,32 @@ function launchBuilder(){
   var resizeHandle=document.createElement('div');resizeHandle.id='_lb_resize';resizeHandle.textContent='⤡';if(IS_MOBILE)resizeHandle.style.display='none';
   var fab=document.createElement('button');fab.id='_lb_fab';fab.textContent='+';fab.title='New entry (mobile)';
   fab.addEventListener('click',function(e){e.stopPropagation();switchTab('build');addEntry();var entries=eDiv.querySelectorAll('._lb_entry');var last=entries[entries.length-1];if(last){last.scrollIntoView({behavior:'smooth',block:'center'});var inp=last.querySelector('._lb_inp');if(inp)setTimeout(function(){inp.focus();},80);}});
+
+  if(!IS_MOBILE){
+    var MIN_W=480,MIN_H=320;
+    [['_tl','nw'],['_tr','ne'],['_bl','sw'],['_br','se']].forEach(function(cfg){
+      var c=document.createElement('div');c.className='_lb_corner '+cfg[0];
+      c.addEventListener('mousedown',function(e){
+        e.preventDefault();e.stopPropagation();
+        var r=bx.getBoundingClientRect();
+        var sx=e.clientX,sy=e.clientY,sl=r.left,st=r.top,sw=r.width,sh=r.height;
+        bx.style.borderRadius='8px';bx.style.boxShadow='0 8px 40px rgba(0,0,0,.6)';bx.style.border='1px solid #374151';
+        function onMove(e){
+          var dx=e.clientX-sx,dy=e.clientY-sy,nl=sl,nt=st,nw=sw,nh=sh;
+          var dir=cfg[1];
+          if(dir==='ne'||dir==='se') nw=Math.max(MIN_W,sw+dx);
+          if(dir==='nw'||dir==='sw'){nw=Math.max(MIN_W,sw-dx);nl=sl+sw-nw;}
+          if(dir==='se'||dir==='sw') nh=Math.max(MIN_H,sh+dy);
+          if(dir==='ne'||dir==='nw'){nh=Math.max(MIN_H,sh-dy);nt=st+sh-nh;}
+          bx.style.left=nl+'px';bx.style.top=nt+'px';bx.style.width=nw+'px';bx.style.height=nh+'px';
+        }
+        function onUp(){document.removeEventListener('mousemove',onMove);document.removeEventListener('mouseup',onUp);}
+        document.addEventListener('mousemove',onMove);document.addEventListener('mouseup',onUp);
+      });
+      bx.appendChild(c);
+    });
+  }
+
   bx.appendChild(hd);bx.appendChild(bd);bx.appendChild(ft);bx.appendChild(resizeHandle);if(IS_MOBILE)bx.appendChild(fab);
   if(IS_MOBILE){document.body.appendChild(bx);}else{document.body.appendChild(bx);}
 
