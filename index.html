@@ -2479,7 +2479,7 @@ function launchBuilder(){
     }
     var typeDot=document.createElement('span');typeDot.className='_lb_type_dot';
     var enumEl=document.createElement('span');enumEl.className='_lb_enum';
-    var eStatWrap=document.createElement('span');eStatWrap.style.cssText='display:flex;gap:5px;align-items:center;margin-left:auto;flex-shrink:0';
+    var eStatWrap=document.createElement('span');eStatWrap.style.cssText='display:flex;gap:6px;align-items:center;padding:4px 0 2px;';
     var eStat1=document.createElement('span');eStat1.style.cssText='font-size:.65rem;font-weight:600;color:#34d399;white-space:nowrap';
     var eStat2=document.createElement('span');eStat2.style.cssText='font-size:.65rem;font-weight:600;color:#34d399;white-space:nowrap';
     eStatWrap.appendChild(eStat1);eStatWrap.appendChild(eStat2);
@@ -2488,7 +2488,7 @@ function launchBuilder(){
     var delBtn=document.createElement('button');delBtn.className='_lb_ebtn';delBtn.textContent='Remove';
     ebtns.appendChild(colBtn);ebtns.appendChild(delBtn);
     eleft.appendChild(dragHandle);eleft.appendChild(typeDot);eleft.appendChild(enumEl);
-    ehead.appendChild(eleft);ehead.appendChild(eStatWrap);ehead.appendChild(ebtns);
+    ehead.appendChild(eleft);ehead.appendChild(ebtns);
     function updStats(){
       var tc=el._triggers?el._triggers.length:0;
       var dc=el._gd?el._gd().description.length:0;
@@ -2797,7 +2797,7 @@ function launchBuilder(){
     grid.appendChild(fld('Entry Type',typeS));
     grid.appendChild(trigFieldWrap);
     grid.appendChild(descWrap);
-    ebody.appendChild(grid);
+    ebody.insertBefore(eStatWrap, grid);
     el.appendChild(ehead);el.appendChild(ebody);
 
     el._gd=function(){
