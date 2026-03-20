@@ -56,6 +56,7 @@ function launchMobile(){
     '#_lbm_filter_row_inner{display:flex;gap:6px;flex-wrap:wrap;align-items:center}',
     '._lbm_fbtn{flex-shrink:0;padding:5px 12px;border-radius:16px;border:1px solid #334155;background:transparent;color:#64748b;font-size:.75rem;cursor:pointer;font-family:system-ui,sans-serif;white-space:nowrap}',
     '._lbm_fbtn.on{color:#fff;border-color:transparent}',
+    '#_lbm_grp_btn.on{background:#16a34a;border-color:transparent;color:#fff}',
     '._lbm_fbtn[data-t="All"].on{background:#475569}',
     '._lbm_fbtn[data-t="Character"].on{background:#9333ea}',
     '._lbm_fbtn[data-t="Item"].on{background:#1d4ed8}',
@@ -298,13 +299,14 @@ function launchMobile(){
     });
     filterRow.appendChild(b);
   });
-  var grpBtn=document.createElement('button');grpBtn.className='_lbm_fbtn';grpBtn.style.cssText='border-style:dashed';grpBtn.textContent='Group by type';
+  var grpBtn=document.createElement('button');grpBtn.className='_lbm_fbtn';grpBtn.id='_lbm_grp_btn';grpBtn.style.cssText='border-style:dashed';grpBtn.textContent='Group by type';
   grpBtn.addEventListener('click',function(){
     var order=['Character','Item','PlotEvent','Location','Other'];
     var sorted=entryOrder.slice().sort(function(a,b){return order.indexOf(entries[a].type)-order.indexOf(entries[b].type);});
     entryOrder.length=0;sorted.forEach(function(id){entryOrder.push(id);});
     sorted.forEach(function(id){var card=document.getElementById('_lbm_card_'+id);if(card)entriesDiv.appendChild(card);});
     renumber();scheduleSave();
+    grpBtn.classList.add('on');setTimeout(function(){grpBtn.classList.remove('on');},800);
   });
   filterRow.appendChild(grpBtn);
 
