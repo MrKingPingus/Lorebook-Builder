@@ -1020,7 +1020,7 @@ function launchBuilder(){
 
   function parseImportText(text){
     text=text.replace(/\r\n/g,'\n').replace(/\r/g,'\n').replace(/\*\*/g,'');
-    var blocks=[];var TRIPLE=/^===\s*.+\s*===/;var KV_NAME=/^Entry Name\s*:/i;
+    var blocks=[];var TRIPLE=/^===\s*.+\s*===/;var KV_NAME=/^(?:Entry\s+)?(?:Name|Title|Label)\s*:/i;
     var lines=text.split('\n');var cur=null;
     lines.forEach(function(line){
       if(TRIPLE.test(line.trim())||KV_NAME.test(line)){if(cur!==null)blocks.push(cur);cur=[line];}
@@ -1029,19 +1029,18 @@ function launchBuilder(){
     if(cur!==null)blocks.push(cur);
     return blocks.map(function(blines){
       var entry={name:'',type:'Character',triggers:[],description:'',delim:','};
-      var descLines=[];var inDesc=false;var m;
+      var descLines=[];var m;
       blines.forEach(function(line){
-        if((m=line.trim().match(/^===\s*(.+?)\s*===$/)))   {entry.name=m[1].trim();inDesc=false;return;}
-        if((m=line.match(/^(?:Entry\s+)?Name\s*:\s*(.+)/i))){entry.name=m[1].trim();inDesc=false;return;}
-        if((m=line.match(/^(?:Entry\s+)?Type\s*:\s*(.+)/i))){entry.type=m[1].trim();inDesc=false;return;}
-        if((m=line.match(/^Triggers?\s*:\s*(.+)/i))){
+        if((m=line.trim().match(/^===\s*(.+?)\s*===$/)))                                       {entry.name=m[1].trim();return;}
+        if((m=line.match(/^(?:Entry\s+)?(?:Name|Title|Label)\s*:\s*(.+)/i)))                   {entry.name=m[1].trim();return;}
+        if((m=line.match(/^(?:Entry\s+)?(?:Type|Category|Kind|Classification)\s*:\s*(.+)/i)))  {entry.type=m[1].trim();return;}
+        if((m=line.match(/^(?:Triggers?|Keywords?|Aliases?|Tags?|Keys?)\s*:\s*(.+)/i))){
           var raw=m[1];var semi=raw.indexOf(';')!==-1;
           entry.delim=semi?';':',';entry.triggers=raw.split(semi?';':',').map(function(t){return t.trim();}).filter(Boolean);
-          inDesc=false;return;
+          return;
         }
-        if((m=line.match(/^Description\s*:\s*([\s\S]*)/i))){descLines=[m[1]];inDesc=true;return;}
-        if(inDesc&&!line.match(/^(?:Entry\s+)?(?:Name|Type)\s*:/i)&&!line.match(/^Triggers?\s*:/i)){descLines.push(line);}
-        else if(inDesc){inDesc=false;}
+        var dm=line.match(/^Description\s*:\s*(.*)/i);
+        descLines.push(dm?dm[1]:line);
       });
       if(descLines.length)entry.description=descLines.join('\n').trim();
       return entry;
@@ -1241,21 +1240,26 @@ function launchBuilder(){
     var lnMatch=text.match(/^LOREBOOK:\s*(.+)/m);
     if(lnMatch)lorebookName=lnMatch[1].trim();
     var blocks=text.split(/(?=^===\s)/m).filter(function(b){return b.trim().startsWith('===');});
+    if(!blocks.length){return{lorebookName:lorebookName,entries:parseImportText(text)};}
     var entries=blocks.map(function(block){
       var lines=block.split('\n');
       var nameLine=lines[0].replace(/^===\s*/,'').replace(/\s*===\s*$/,'').trim();
-      var entry={name:nameLine,type:'Character',triggers:[],description:''};
+      var entry={name:nameLine,type:'Character',triggers:[],description:'',delim:','};
+      var descLines=[];
       lines.slice(1).forEach(function(line){
-        var tm=line.match(/^Type:\s*(.+)/i);if(tm)entry.type=tm[1].trim();
-        var trm=line.match(/^Triggers:\s*(.+)/i);
+        var tm=line.match(/^(?:Entry\s+)?(?:Type|Category|Kind|Classification)\s*:\s*(.+)/i);if(tm){entry.type=tm[1].trim();return;}
+        var trm=line.match(/^(?:Triggers?|Keywords?|Aliases?|Tags?|Keys?)\s*:\s*(.+)/i);
         if(trm){
           var raw=trm[1];
           var usesSemi=raw.indexOf(';')!==-1;
           entry.delim=usesSemi?';':',';
           entry.triggers=raw.split(usesSemi?';':',').map(function(t){return t.trim();}).filter(Boolean);
+          return;
         }
-        var dm=line.match(/^Description:\s*([\s\S]*)/i);if(dm)entry.description=dm[1].trim();
+        var dm=line.match(/^Description\s*:\s*(.*)/i);
+        descLines.push(dm?dm[1]:line);
       });
+      entry.description=descLines.join('\n').trim();
       return entry;
     }).filter(function(e){return e.name;});
     return{lorebookName:lorebookName,entries:entries};

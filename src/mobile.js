@@ -598,15 +598,9 @@ function launchMobile(){
     // Normalise line endings
     text=text.replace(/\r\n/g,'\n').replace(/\r/g,'\n').replace(/\*\*/g,'');
 
-    // ── Detect and split into raw blocks ──
-    // Supports two block-start markers:
-    //   1. === Entry Name ===   (template format)
-    //   2. Entry Name: XXX      (key-value format — splits on blank line or next Entry Name:)
     var blocks=[];
-
-    // Strategy: split on lines that look like a block opener
     var TRIPLE=  /^===\s*.+\s*===/;
-    var KV_NAME= /^Entry Name\s*:/i;
+    var KV_NAME= /^(?:Entry\s+)?(?:Name|Title|Label)\s*:/i;
 
     var lines=text.split('\n');
     var cur=null;
@@ -616,54 +610,26 @@ function launchMobile(){
         cur=[line];
       } else {
         if(cur!==null)cur.push(line);
-        // Lines before any block opener are ignored
       }
     });
     if(cur!==null)blocks.push(cur);
 
-    // ── Parse each block ──
     return blocks.map(function(blines){
       var entry={name:'',type:'Character',triggers:[],description:'',delim:','};
-      var descLines=[];var inDesc=false;
+      var descLines=[];var m;
 
       blines.forEach(function(line){
-        // Block title: === Name ===
-        var tripleM=line.trim().match(/^===\s*(.+?)\s*===$/);
-        if(tripleM){entry.name=tripleM[1].trim();inDesc=false;return;}
-
-        // Key-value lines — all case-insensitive, colon separator
-        // Entry Name / Name
-        var nameM=line.match(/^(?:Entry\s+)?Name\s*:\s*(.+)/i);
-        if(nameM){entry.name=nameM[1].trim();inDesc=false;return;}
-
-        // Entry Type / Type
-        var typeM=line.match(/^(?:Entry\s+)?Type\s*:\s*(.+)/i);
-        if(typeM){entry.type=typeM[1].trim();inDesc=false;return;}
-
-        // Triggers
-        var trigM=line.match(/^Triggers?\s*:\s*(.+)/i);
-        if(trigM){
-          var raw=trigM[1];
-          var semi=raw.indexOf(';')!==-1;
+        if((m=line.trim().match(/^===\s*(.+?)\s*===$/))){entry.name=m[1].trim();return;}
+        if((m=line.match(/^(?:Entry\s+)?(?:Name|Title|Label)\s*:\s*(.+)/i)))                  {entry.name=m[1].trim();return;}
+        if((m=line.match(/^(?:Entry\s+)?(?:Type|Category|Kind|Classification)\s*:\s*(.+)/i))) {entry.type=m[1].trim();return;}
+        if((m=line.match(/^(?:Triggers?|Keywords?|Aliases?|Tags?|Keys?)\s*:\s*(.+)/i))){
+          var raw=m[1];var semi=raw.indexOf(';')!==-1;
           entry.delim=semi?';':',';
           entry.triggers=raw.split(semi?';':',').map(function(t){return t.trim();}).filter(Boolean);
-          inDesc=false;return;
+          return;
         }
-
-        // Description (may continue on following lines)
-        var descM=line.match(/^Description\s*:\s*([\s\S]*)/i);
-        if(descM){descLines=[descM[1]];inDesc=true;return;}
-
-        // Continuation of description
-        if(inDesc){
-          // A blank line after description content ends it; a recognised key also ends it
-          if(line.match(/^(?:Entry\s+)?(?:Name|Type)\s*:/i)||line.match(/^Triggers?\s*:/i)){
-            inDesc=false;
-            // Re-process this line as a key (recurse via falling through — handled above already)
-          } else {
-            descLines.push(line);
-          }
-        }
+        var dm=line.match(/^Description\s*:\s*(.*)/i);
+        descLines.push(dm?dm[1]:line);
       });
 
       if(descLines.length)entry.description=descLines.join('\n').trim();
@@ -1722,16 +1688,20 @@ function launchMobile(){
     var lnMatch=text.match(/^LOREBOOK:\s*(.+)/m);
     if(lnMatch)lorebookName=lnMatch[1].trim();
     var blocks=text.split(/(?=^===\s)/m).filter(function(b){return b.trim().startsWith('===');});
+    if(!blocks.length){return{lorebookName:lorebookName,entries:parseImportText(text)};}
     var result=blocks.map(function(block){
       var lines=block.split('\n');
       var name=lines[0].replace(/^===\s*/,'').replace(/\s*===\s*$/,'').trim();
       var entry={name:name,type:'Character',triggers:[],description:'',delim:','};
+      var descLines=[];
       lines.slice(1).forEach(function(line){
-        var tm=line.match(/^Type:\s*(.+)/i);if(tm)entry.type=tm[1].trim();
-        var trm=line.match(/^Triggers:\s*(.+)/i);
-        if(trm){var raw=trm[1];var semi=raw.indexOf(';')!==-1;entry.delim=semi?';':',';entry.triggers=raw.split(semi?';':',').map(function(t){return t.trim();}).filter(Boolean);}
-        var dm=line.match(/^Description:\s*([\s\S]*)/i);if(dm)entry.description=dm[1].trim();
+        var tm=line.match(/^(?:Entry\s+)?(?:Type|Category|Kind|Classification)\s*:\s*(.+)/i);if(tm){entry.type=tm[1].trim();return;}
+        var trm=line.match(/^(?:Triggers?|Keywords?|Aliases?|Tags?|Keys?)\s*:\s*(.+)/i);
+        if(trm){var raw=trm[1];var semi=raw.indexOf(';')!==-1;entry.delim=semi?';':',';entry.triggers=raw.split(semi?';':',').map(function(t){return t.trim();}).filter(Boolean);return;}
+        var dm=line.match(/^Description\s*:\s*(.*)/i);
+        descLines.push(dm?dm[1]:line);
       });
+      entry.description=descLines.join('\n').trim();
       return entry;
     }).filter(function(e){return e.name;});
     return{lorebookName:lorebookName,entries:result};
