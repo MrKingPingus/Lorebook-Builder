@@ -528,7 +528,8 @@ function launchMobile(){
     var order=['Character','Item','PlotEvent','Location','Other'];
     var sorted=entryOrder.slice().sort(function(a,b){return order.indexOf(entries[a].type)-order.indexOf(entries[b].type);});
     entryOrder.length=0;sorted.forEach(function(id){entryOrder.push(id);});
-    renderList();scheduleSave();
+    sorted.forEach(function(id){var card=document.getElementById('_lbm_card_'+id);if(card)entriesDiv.appendChild(card);});
+    renumber();scheduleSave();
   });
   filterRow.appendChild(grpBtn);
 
