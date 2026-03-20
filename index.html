@@ -281,6 +281,7 @@ function launchMobile(){
     '#_lbm_filter_row_inner{display:flex;gap:6px;flex-wrap:wrap;align-items:center}',
     '._lbm_fbtn{flex-shrink:0;padding:5px 12px;border-radius:16px;border:1px solid #334155;background:transparent;color:#64748b;font-size:.75rem;cursor:pointer;font-family:system-ui,sans-serif;white-space:nowrap}',
     '._lbm_fbtn.on{color:#fff;border-color:transparent}',
+    '#_lbm_grp_btn.on{background:#16a34a;border-color:transparent;color:#fff}',
     '._lbm_fbtn[data-t="All"].on{background:#475569}',
     '._lbm_fbtn[data-t="Character"].on{background:#9333ea}',
     '._lbm_fbtn[data-t="Item"].on{background:#1d4ed8}',
@@ -523,12 +524,14 @@ function launchMobile(){
     });
     filterRow.appendChild(b);
   });
-  var grpBtn=document.createElement('button');grpBtn.className='_lbm_fbtn';grpBtn.style.cssText='border-style:dashed';grpBtn.textContent='Group by type';
+  var grpBtn=document.createElement('button');grpBtn.className='_lbm_fbtn';grpBtn.id='_lbm_grp_btn';grpBtn.style.cssText='border-style:dashed';grpBtn.textContent='Group by type';
   grpBtn.addEventListener('click',function(){
     var order=['Character','Item','PlotEvent','Location','Other'];
-    var sorted=entryOrder.slice().sort(function(a,b){return order.indexOf(entriesData[a].type)-order.indexOf(entriesData[b].type);});
+    var sorted=entryOrder.slice().sort(function(a,b){return order.indexOf(entries[a].type)-order.indexOf(entries[b].type);});
     entryOrder.length=0;sorted.forEach(function(id){entryOrder.push(id);});
-    renderList();scheduleSave();
+    sorted.forEach(function(id){var card=document.getElementById('_lbm_card_'+id);if(card)entriesDiv.appendChild(card);});
+    renumber();scheduleSave();
+    grpBtn.classList.add('on');setTimeout(function(){grpBtn.classList.remove('on');},800);
   });
   filterRow.appendChild(grpBtn);
 
@@ -567,7 +570,24 @@ function launchMobile(){
   var importBtn=document.createElement('button');importBtn.className='_lbm_btn primary';importBtn.textContent='Import These Entries →';importBtn.style.display='none';
   convSec2.appendChild(cs2h);convSec2.appendChild(dropZone);convSec2.appendChild(parseErr);convSec2.appendChild(previewList);convSec2.appendChild(importBtn);
 
-  pConv.appendChild(convSec1);pConv.appendChild(convSec2);
+  var loadSec=document.createElement('div');loadSec.className='_lbm_section';
+  var lsh=document.createElement('h3');lsh.textContent='Load — continue a previous lorebook';
+  var lsp=document.createElement('p');lsp.textContent='Paste a previously exported JSON to pick up where you left off.';
+  var jin=document.createElement('textarea');jin.className='_lbm_ta_mono';jin.placeholder='Paste lorebook JSON here...';
+  var jsonFileInp=document.createElement('input');jsonFileInp.type='file';jsonFileInp.accept='.json';jsonFileInp.style.display='none';
+  var uploadJsonBtn=document.createElement('button');uploadJsonBtn.className='_lbm_btn';uploadJsonBtn.textContent='⬆ Upload .json file';
+  uploadJsonBtn.addEventListener('click',function(){jsonFileInp.click();});
+  jsonFileInp.addEventListener('change',function(){
+    var file=jsonFileInp.files[0];if(!file)return;
+    var r=new FileReader();r.onload=function(ev){jin.value=ev.target.result;};
+    r.readAsText(file);jsonFileInp.value='';
+  });
+  var loadBtn=document.createElement('button');loadBtn.className='_lbm_btn primary';loadBtn.textContent='Load Lorebook';
+  var jerr=document.createElement('div');jerr.className='_lbm_jerr';
+  var clearBtn=document.createElement('button');clearBtn.className='_lbm_btn';clearBtn.style.marginTop='8px';clearBtn.textContent='Clear All & Start Fresh';
+  loadSec.appendChild(lsh);loadSec.appendChild(lsp);loadSec.appendChild(uploadJsonBtn);loadSec.appendChild(jsonFileInp);loadSec.appendChild(jin);loadSec.appendChild(loadBtn);loadSec.appendChild(jerr);loadSec.appendChild(clearBtn);
+
+  pConv.appendChild(convSec1);pConv.appendChild(convSec2);pConv.appendChild(loadSec);
 
   var pSave=pConv;
 
@@ -593,30 +613,13 @@ function launchMobile(){
   var exOk=document.createElement('div');exOk.className='_lbm_ok';
   exportSec.appendChild(exh);exportSec.appendChild(exp);exportSec.appendChild(dlTxtBtn2);exportSec.appendChild(dlDocxBtn2);exportSec.appendChild(exOk);
 
-  var loadSec=document.createElement('div');loadSec.className='_lbm_section';
-  var lsh=document.createElement('h3');lsh.textContent='Load — continue a previous lorebook';
-  var lsp=document.createElement('p');lsp.textContent='Paste a previously exported JSON to pick up where you left off.';
-  var jin=document.createElement('textarea');jin.className='_lbm_ta_mono';jin.placeholder='Paste lorebook JSON here...';
-  var jsonFileInp=document.createElement('input');jsonFileInp.type='file';jsonFileInp.accept='.json';jsonFileInp.style.display='none';
-  var uploadJsonBtn=document.createElement('button');uploadJsonBtn.className='_lbm_btn';uploadJsonBtn.textContent='⬆ Upload .json file';
-  uploadJsonBtn.addEventListener('click',function(){jsonFileInp.click();});
-  jsonFileInp.addEventListener('change',function(){
-    var file=jsonFileInp.files[0];if(!file)return;
-    var r=new FileReader();r.onload=function(ev){jin.value=ev.target.result;};
-    r.readAsText(file);jsonFileInp.value='';
-  });
-  var loadBtn=document.createElement('button');loadBtn.className='_lbm_btn primary';loadBtn.textContent='Load Lorebook';
-  var jerr=document.createElement('div');jerr.className='_lbm_jerr';
-  var clearBtn=document.createElement('button');clearBtn.className='_lbm_btn';clearBtn.style.marginTop='8px';clearBtn.textContent='Clear All & Start Fresh';
-  loadSec.appendChild(lsh);loadSec.appendChild(lsp);loadSec.appendChild(uploadJsonBtn);loadSec.appendChild(jsonFileInp);loadSec.appendChild(jin);loadSec.appendChild(loadBtn);loadSec.appendChild(jerr);loadSec.appendChild(clearBtn);
-
-  pSave.appendChild(saveSec);pSave.appendChild(exportSec);pSave.appendChild(loadSec);
+  pSave.appendChild(saveSec);pSave.appendChild(exportSec);
 
   var pSettings=document.createElement('div');pSettings.id='_lbm_p_settings';pSettings.className='_lbm_panel';
 
   var setScroll=document.createElement('div');setScroll.style.cssText='padding:16px;display:flex;flex-direction:column;gap:14px';
 
-  function mkToggle(title,desc,key,defaultVal){
+  function mkToggle(title,desc,key,defaultVal,onChange){
     var wrap=document.createElement('div');wrap.className='_lbm_section';
     var row=document.createElement('div');row.style.cssText='display:flex;align-items:flex-start;justify-content:space-between;gap:12px';
     var info=document.createElement('div');
@@ -637,6 +640,7 @@ function launchMobile(){
         if(window._lbm_tiered_counter){el.className='_lbm_cc'+(n>1250?' over':n>750?' warn':' good');}
         else{el.className='_lbm_cc'+(n>1500?' over':n>1200?' warn':'');}
       });
+      if(onChange)onChange();
     });
     row.appendChild(info);row.appendChild(tog);
     wrap.appendChild(row);
@@ -682,7 +686,8 @@ function launchMobile(){
     'Hide entry stats',
     'Hide the trigger count and character count shown on each entry.',
     '_lbm_hide_stats',
-    false
+    false,
+    function(){document.querySelectorAll('._lbm_card_stats').forEach(function(el){el.style.display=window._lbm_hide_stats?'none':'';});}
   ));
 
   pSettings.appendChild(setScroll);
@@ -1034,7 +1039,7 @@ function launchMobile(){
     });
     entryOrder.forEach(function(id,i){
       var card=document.getElementById('_lbm_card_'+id);
-      if(card&&card._num)card._num.textContent='ENTRY #'+(i+1);
+      if(card&&card._num)card._num.textContent='#'+(i+1);
     });
   }
 
@@ -1598,6 +1603,7 @@ function launchMobile(){
 
   var panels={build:pBuild,impexp:pConv,settings:pSettings};
   function switchTab(t){
+    closeFabMenu();
     Object.keys(panels).forEach(function(k){
       panels[k].classList.toggle('active',k===t);
       navBtns[k].classList.toggle('active',k===t);
