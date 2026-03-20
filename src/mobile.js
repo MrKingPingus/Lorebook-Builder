@@ -3,8 +3,8 @@ function launchMobile(){
 
   var currentLBKey=null;
   var TYPES=['Character','Item','PlotEvent','Location','Other'];
-  var TYPE_COLORS={Character:'#818cf8',Item:'#34d399',Location:'#fbbf24',PlotEvent:'#f87171',Other:'#0d9488'};
-  var TYPE_BG={Character:'#1e1b4b',Item:'#052e16',Location:'#1c1200',PlotEvent:'#2d0a0a',Other:'#1a1a1a'};
+  var TYPE_COLORS={Character:'#c084fc',Item:'#60a5fa',Location:'#fbbf24',PlotEvent:'#f87171',Other:'#0d9488'};
+  var TYPE_BG={Character:'#2e1065',Item:'#172554',Location:'#1c1200',PlotEvent:'#2d0a0a',Other:'#1a1a1a'};
 
   var CSS=[
     '*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}',
@@ -57,8 +57,8 @@ function launchMobile(){
     '._lbm_fbtn{flex-shrink:0;padding:5px 12px;border-radius:16px;border:1px solid #334155;background:transparent;color:#64748b;font-size:.75rem;cursor:pointer;font-family:system-ui,sans-serif;white-space:nowrap}',
     '._lbm_fbtn.on{color:#fff;border-color:transparent}',
     '._lbm_fbtn[data-t="All"].on{background:#475569}',
-    '._lbm_fbtn[data-t="Character"].on{background:#4f46e5}',
-    '._lbm_fbtn[data-t="Item"].on{background:#059669}',
+    '._lbm_fbtn[data-t="Character"].on{background:#9333ea}',
+    '._lbm_fbtn[data-t="Item"].on{background:#1d4ed8}',
     '._lbm_fbtn[data-t="Location"].on{background:#d97706}',
     '._lbm_fbtn[data-t="PlotEvent"].on{background:#dc2626}',
     '._lbm_fbtn[data-t="Other"].on{background:#0d9488}',
@@ -104,8 +104,8 @@ function launchMobile(){
     '#_lbm_type_row{display:flex;gap:6px;flex-wrap:wrap}',
     '._lbm_typebtn{flex:1;min-width:80px;padding:10px 6px;border-radius:8px;border:2px solid #334155;background:#1e293b;color:#64748b;font-size:.78rem;font-weight:600;cursor:pointer;text-align:center;font-family:system-ui,sans-serif;transition:all .15s}',
     '._lbm_typebtn.sel{color:#fff;border-color:transparent}',
-    '._lbm_typebtn[data-t="Character"].sel{background:#4f46e5}',
-    '._lbm_typebtn[data-t="Item"].sel{background:#059669}',
+    '._lbm_typebtn[data-t="Character"].sel{background:#9333ea}',
+    '._lbm_typebtn[data-t="Item"].sel{background:#1d4ed8}',
     '._lbm_typebtn[data-t="Location"].sel{background:#d97706}',
     '._lbm_typebtn[data-t="PlotEvent"].sel{background:#dc2626}',
     '._lbm_typebtn[data-t="Other"].sel{background:#0d9488}',
