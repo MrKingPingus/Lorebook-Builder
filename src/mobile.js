@@ -319,7 +319,10 @@ function launchMobile(){
   pBuild.appendChild(entriesDiv);
   pBuild.appendChild(emptyDiv);
 
-  var pConv=document.createElement('div');pConv.id='_lbm_p_conv';pConv.className='_lbm_panel';
+  var pConv=document.createElement('div');pConv.id='_lbm_p_impexp';pConv.className='_lbm_panel';
+
+  var impSecLabel=document.createElement('p');impSecLabel.style.cssText='font-size:.7rem;color:#6b7280;text-transform:uppercase;letter-spacing:.06em;margin:0 0 10px;padding:0 16px;padding-top:16px';impSecLabel.textContent='Import';
+  pConv.appendChild(impSecLabel);
 
   var convSec1=document.createElement('div');convSec1.className='_lbm_section';
   var cs1h=document.createElement('h3');cs1h.textContent='Step 1 — Download a template';
@@ -341,7 +344,10 @@ function launchMobile(){
 
   pConv.appendChild(convSec1);pConv.appendChild(convSec2);
 
-  var pSave=document.createElement('div');pSave.id='_lbm_p_save';pSave.className='_lbm_panel';
+  var pSave=pConv;
+
+  var expSecLabel=document.createElement('p');expSecLabel.style.cssText='font-size:.7rem;color:#6b7280;text-transform:uppercase;letter-spacing:.06em;margin:16px 0 10px;padding:0 16px';expSecLabel.textContent='Export';
+  pSave.appendChild(expSecLabel);
 
   var saveSec=document.createElement('div');saveSec.className='_lbm_section';
   var ssh=document.createElement('h3');ssh.textContent='Export — save your work';
@@ -461,8 +467,7 @@ function launchMobile(){
   var nav=document.createElement('div');nav.id='_lbm_nav';
   var navData=[
     {id:'build',icon:'📋',label:'Build'},
-    {id:'conv',icon:'🔄',label:'Convert'},
-    {id:'save',icon:'💾',label:'Save / Load'},
+    {id:'impexp',icon:'📤',label:'Import / Export'},
     {id:'settings',icon:'⚙',label:'Settings'}
   ];
   var navBtns={};
@@ -1400,7 +1405,7 @@ function launchMobile(){
     setTimeout(function(){removeEntry(id);},250);
   });
 
-  var panels={build:pBuild,conv:pConv,save:pSave,settings:pSettings};
+  var panels={build:pBuild,impexp:pConv,settings:pSettings};
   function switchTab(t){
     Object.keys(panels).forEach(function(k){
       panels[k].classList.toggle('active',k===t);
