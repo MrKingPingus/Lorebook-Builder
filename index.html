@@ -529,8 +529,8 @@ function launchMobile(){
     var order=['Character','Item','PlotEvent','Location','Other'];
     var sorted=entryOrder.slice().sort(function(a,b){return order.indexOf(entries[a].type)-order.indexOf(entries[b].type);});
     entryOrder.length=0;sorted.forEach(function(id){entryOrder.push(id);});
-    sorted.forEach(function(id){var card=document.getElementById('_lbm_card_'+id);if(card)entriesDiv.appendChild(card);});
-    renumber();scheduleSave();
+    sorted.forEach(function(id,i){var card=document.getElementById('_lbm_card_'+id);if(card){entriesDiv.appendChild(card);if(card._num)card._num.textContent='#'+(i+1);}});
+    scheduleSave();
     grpBtn.classList.add('on');setTimeout(function(){grpBtn.classList.remove('on');},800);
   });
   filterRow.appendChild(grpBtn);
@@ -1033,10 +1033,6 @@ function launchMobile(){
   }
 
   function renumber(){
-    var visible=entryOrder.filter(function(id){
-      var c=document.getElementById('_lbm_card_'+id);
-      return c&&!c.classList.contains('hidden');
-    });
     entryOrder.forEach(function(id,i){
       var card=document.getElementById('_lbm_card_'+id);
       if(card&&card._num)card._num.textContent='#'+(i+1);
