@@ -2419,6 +2419,7 @@ function launchBuilder(){
   try{var s_sc=localStorage.getItem('_lb_sugs_collapsed');window._lb_sugs_collapsed=(s_sc==='1');}catch(e){window._lb_sugs_collapsed=false;}
   try{var s_hs=localStorage.getItem('_lb_hide_stats');window._lb_hide_stats=(s_hs==='1');}catch(e){window._lb_hide_stats=false;}
   try{var s_hk=localStorage.getItem('_lb_hotkey_new');window._lb_hotkey_new=(s_hk&&s_hk.length===1)?s_hk:'n';}catch(e){window._lb_hotkey_new='n';}
+  try{var s_ds=localStorage.getItem('_lb_default_size');window._lb_default_size=(s_ds==='fullpage')?'fullpage':'column';}catch(e){window._lb_default_size='column';}
 
   setBox.appendChild(mkDeskToggle('Tiered character counter','Green 0–750 · Yellow 750–1250 · Red 1250–1500. Turn off for a simple red-at-1500 warning.','_lb_tiered_counter'));
   setBox.appendChild(mkDeskToggle('Compact trigger input','Use a single text field for triggers instead of individual tag chips.','_lb_compact_triggers'));
@@ -2448,6 +2449,33 @@ function launchBuilder(){
   hkRight.appendChild(hkLabel);hkRight.appendChild(hkInp);
   hkRow.appendChild(hkInfo);hkRow.appendChild(hkRight);hkBox.appendChild(hkRow);
   setBox.appendChild(hkBox);
+
+  // Default window size dropdown
+  var dsBox=document.createElement('div');dsBox.className='_lb_section_box';
+  var dsRow=document.createElement('div');dsRow.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:12px';
+  var dsInfo=document.createElement('div');
+  var dsTitle=document.createElement('div');dsTitle.style.cssText='font-size:.8rem;color:#e5e7eb;font-weight:600;margin-bottom:3px';dsTitle.textContent='Default window size';
+  var dsDesc=document.createElement('div');dsDesc.style.cssText='font-size:.75rem;color:#6b7280;line-height:1.4';dsDesc.textContent='Size applied when the app first opens or is reset.';
+  dsInfo.appendChild(dsTitle);dsInfo.appendChild(dsDesc);
+  var dsSel=document.createElement('select');dsSel.className='_lb_sel';dsSel.style.cssText='width:auto;flex-shrink:0';
+  [['column','Column'],['fullpage','Full Page']].forEach(function(opt){
+    var o=document.createElement('option');o.value=opt[0];o.textContent=opt[1];
+    if(window._lb_default_size===opt[0])o.selected=true;
+    dsSel.appendChild(o);
+  });
+  dsSel.addEventListener('change',function(){
+    window._lb_default_size=dsSel.value;
+    try{localStorage.setItem('_lb_default_size',dsSel.value);}catch(e){}
+  });
+  dsRow.appendChild(dsInfo);dsRow.appendChild(dsSel);dsBox.appendChild(dsRow);
+  setBox.appendChild(dsBox);
+
+  // Reset window button
+  var rstBox=document.createElement('div');rstBox.className='_lb_section_box';
+  var rstBtn=document.createElement('button');rstBtn.className='_lb_btn _lb_btns';rstBtn.textContent='Reset window to default size';
+  rstBtn.addEventListener('click',function(e){e.stopPropagation();applyDefaultSize();});
+  rstBox.appendChild(rstBtn);setBox.appendChild(rstBox);
+
   pSettings.appendChild(setBox);
 
   bd.appendChild(pBuild);bd.appendChild(pImpExp);bd.appendChild(pSettings);
@@ -2513,6 +2541,17 @@ function launchBuilder(){
 
   if(!IS_MOBILE){
     var MIN_W=480,MIN_H=320;
+    function applyDefaultSize(){
+      var vw=window.innerWidth,vh=window.innerHeight;
+      var nw,nh;
+      if(window._lb_default_size==='fullpage'){nw=vw;nh=vh;}
+      else{nw=Math.max(MIN_W,Math.round(vw/3));nh=Math.max(MIN_H,Math.round(vh*0.85));}
+      bx._desiredW=nw;bx._desiredH=nh;
+      bx.style.left=Math.round((vw-nw)/2)+'px';bx.style.top=Math.round((vh-nh)/2)+'px';
+      bx.style.width=nw+'px';bx.style.height=nh+'px';
+      bx.style.borderRadius='8px';bx.style.boxShadow='0 8px 40px rgba(0,0,0,.6)';bx.style.border='1px solid #374151';
+      try{localStorage.removeItem('_lb_window_pos');}catch(e){}
+    }
     [['_tl','nw'],['_tr','ne'],['_bl','sw'],['_br','se']].forEach(function(cfg){
       var c=document.createElement('div');c.className='_lb_corner '+cfg[0];
       c.addEventListener('mousedown',function(e){
@@ -2547,28 +2586,23 @@ function launchBuilder(){
   bx.appendChild(hd);bx.appendChild(bd);bx.appendChild(ft);bx.appendChild(resizeHandle);if(IS_MOBILE)bx.appendChild(fab);
   if(IS_MOBILE){document.body.appendChild(bx);}else{
     document.body.appendChild(bx);
-    var _vw=window.innerWidth,_vh=window.innerHeight;
-    var _dw=Math.max(MIN_W,Math.round(_vw/3)),_dh=Math.max(MIN_H,Math.round(_vh*0.85));
-    var _dl=Math.round((_vw-_dw)/2),_dt=Math.round((_vh-_dh)/2);
-    bx._desiredW=_dw;bx._desiredH=_dh;
-    bx.style.left=_dl+'px';bx.style.top=_dt+'px';bx.style.width=_dw+'px';bx.style.height=_dh+'px';
-    bx.style.borderRadius='8px';bx.style.boxShadow='0 8px 40px rgba(0,0,0,.6)';bx.style.border='1px solid #374151';
+    applyDefaultSize();
     try{
       var _p=JSON.parse(localStorage.getItem('_lb_window_pos')||'null');
       if(_p&&_p.w>=480&&_p.h>=320){
-        bx._desiredW=_p.w;bx._desiredH=_p.h;
-        var _pw=Math.min(_p.w,_vw),_ph=Math.min(_p.h,_vh);
-        var _pl=Math.max(0,Math.min(_p.l,_vw-_pw)),_pt=Math.max(0,Math.min(_p.t,_vh-_ph));
-        bx.style.left=_pl+'px';bx.style.top=_pt+'px';bx.style.width=_pw+'px';bx.style.height=_ph+'px';
+        var _vw=window.innerWidth,_vh=window.innerHeight;
+        var _pw=Math.max(MIN_W,Math.min(_p.w,_vw)),_ph=Math.max(MIN_H,Math.min(_p.h,_vh));
+        bx._desiredW=_pw;bx._desiredH=_ph;
+        bx.style.left=Math.round((_vw-_pw)/2)+'px';bx.style.top=Math.round((_vh-_ph)/2)+'px';
+        bx.style.width=_pw+'px';bx.style.height=_ph+'px';
       }
     }catch(e){}
     window.addEventListener('resize',function(){
       var vw=window.innerWidth,vh=window.innerHeight;
       var dw=bx._desiredW||bx.offsetWidth,dh=bx._desiredH||bx.offsetHeight;
       var nw=Math.max(MIN_W,Math.min(dw,vw)),nh=Math.max(MIN_H,Math.min(dh,vh));
-      var r=bx.getBoundingClientRect();
-      var nl=Math.max(0,Math.min(r.left,vw-nw)),nt=Math.max(0,Math.min(r.top,vh-nh));
-      bx.style.left=nl+'px';bx.style.top=nt+'px';bx.style.width=nw+'px';bx.style.height=nh+'px';
+      bx.style.left=Math.round((vw-nw)/2)+'px';bx.style.top=Math.round((vh-nh)/2)+'px';
+      bx.style.width=nw+'px';bx.style.height=nh+'px';
     });
   }
 
