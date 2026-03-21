@@ -763,7 +763,7 @@ function launchBuilder(){
     var descHlWrap=document.createElement('div');descHlWrap.className='_lb_desc_hl_wrap';
     descHlWrap.appendChild(descHlDiv);descHlWrap.appendChild(descTA);
     function syncDescHl(re){
-      var safe=descTA.value.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      var safe=escHtml(descTA.value);
       if(re)safe=safe.replace(re,'<mark style="'+HL_MARK+'">$1</mark>');
       descHlDiv.innerHTML=safe+' ';
     }
@@ -902,8 +902,13 @@ function launchBuilder(){
       renderPhrasePills();renderSugs();
     });
 
+    var _lastSugKey='';
     function renderSugs(){
-      var raw=getSuggestions(nameI.value.trim(),typeS.value,descTA.value.trim());
+      var nm=nameI.value.trim(),ty=typeS.value,de=descTA.value.trim();
+      var sugKey=nm+'|'+ty+'|'+de+'|'+sugOffset+'|'+el._triggers.join('\0');
+      if(sugKey===_lastSugKey)return;
+      _lastSugKey=sugKey;
+      var raw=getSuggestions(nm,ty,de);
       var existing=el._triggers.map(function(t){return t.toLowerCase();});
       var filtered=raw.filter(function(s){return existing.indexOf(s)===-1;});
       sugRow.innerHTML='';
@@ -1005,7 +1010,7 @@ function launchBuilder(){
       typeS.selectedIndex=next;
       updEnum();sugOffset=0;renderSugs();scheduleSave();applyFilter();
     },{passive:false});
-    descTA.addEventListener('input',function(){autoGrow();updCC();sugOffset=0;renderSugs();scheduleSave();var _q=searchInp.value.trim().toLowerCase();var _e=_q?_q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'):'';syncDescHl(_e?new RegExp('('+_e+')','gi'):null);});
+    descTA.addEventListener('input',function(){autoGrow();updCC();sugOffset=0;renderSugs();scheduleSave();var _q=searchInp.value.trim().toLowerCase();var _e=_q?regexEscape(_q):'';syncDescHl(_e?new RegExp('('+_e+')','gi'):null);});
 
     delBtn.addEventListener('click',function(e){e.stopPropagation();el.remove();scheduleSave();});
     colBtn.addEventListener('click',function(e){e.stopPropagation();var c=el.classList.toggle('_lb_collapsed');colBtn.textContent=c?'▼ Expand':'▲ Collapse';});
@@ -1034,9 +1039,9 @@ function launchBuilder(){
     var q=searchInp.value.trim().toLowerCase();
     var isFnR=searchMode.value==='fnr';
     searchClearBtn.style.display=searchInp.value?'block':'none';
-    var esc=q?q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'):'';
+    var esc=q?regexEscape(q):'';
     var hlRe=esc?new RegExp('('+esc+')','gi'):null;
-    function hlText(str){return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(hlRe,'<mark style="'+HL_MARK+'">$1</mark>');}
+    function hlText(str){return escHtml(str).replace(hlRe,'<mark style="'+HL_MARK+'">$1</mark>');}
     eDiv.querySelectorAll('._lb_entry').forEach(function(el){
       var type=el.dataset.type||'Character';
       var typeOk=activeFilters.has('All')||activeFilters.has(type);
@@ -1079,7 +1084,7 @@ function launchBuilder(){
     var q=searchInp.value.trim().toLowerCase();
     if(!q)return{matches:0,entryCount:0};
     var matches=0;var entryCount=0;
-    var re=new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi');
+    var re=new RegExp(regexEscape(q),'gi');
     eDiv.querySelectorAll('._lb_entry').forEach(function(el){
       if(!el._gd)return;
       var d=el._gd();var found=0;
@@ -1127,7 +1132,7 @@ function launchBuilder(){
   replaceAllBtn.addEventListener('click',function(e){
     e.stopPropagation();
     var find=searchInp.value.trim();var repl=replaceInp.value;if(!find)return;
-    var re=new RegExp(find.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi');
+    var re=new RegExp(regexEscape(find),'gi');
     eDiv.querySelectorAll('._lb_entry').forEach(function(el){
       if(!el._triggers)return;
       el._triggers=el._triggers.map(function(t){return t.replace(re,repl).trim();}).filter(Boolean);
@@ -1304,8 +1309,7 @@ function launchBuilder(){
       loadState({name:'',entries:[]});addEntry();
     } else {
       currentLBKey=targetKey;
-      var idx=lbIndex();var slot=idx.find(function(x){return x.key===targetKey;});
-      if(slot){idx=[slot].concat(idx.filter(function(x){return x.key!==targetKey;}));lbSaveIndex(idx);}
+      lbMoveToFront(targetKey);
       try{
         var sv=localStorage.getItem(targetKey);
         if(sv){loadState(JSON.parse(sv));}else{loadState({name:'',entries:[]});addEntry();}
@@ -1509,7 +1513,7 @@ function launchBuilder(){
   }
   function downloadDOCX(filename,okEl){
     var state=getState();var lbName=state.name||'My Lorebook';
-    function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+    function esc(s){return escHtml(s).replace(/"/g,'&quot;');}
     function para(text,style){return'<w:p><w:pPr><w:pStyle w:val="'+style+'"/></w:pPr><w:r><w:t xml:space="preserve">'+esc(text)+'</w:t></w:r></w:p>';}
     function boldPara(label,value){if(!value)return'';return'<w:p><w:r><w:rPr><w:b/></w:rPr><w:t xml:space="preserve">'+esc(label)+'</w:t></w:r><w:r><w:t xml:space="preserve"> '+esc(value)+'</w:t></w:r></w:p>';}
     function emptyPara(){return'<w:p><w:r><w:t></w:t></w:r></w:p>';}

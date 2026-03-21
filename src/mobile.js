@@ -838,7 +838,7 @@ function launchMobile(){
       if(card._name){
         if(q&&searchOk&&!isFnR){
           var raw=e.name||'Untitled entry';
-          var re=new RegExp('('+q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi');
+          var re=new RegExp('('+regexEscape(q)+')','gi');
           card._name.innerHTML=raw.replace(re,'<mark>$1</mark>');
         } else {
           card._name.textContent=e.name||'Untitled entry';
@@ -856,7 +856,7 @@ function launchMobile(){
     entryOrder.forEach(function(id){
       var e=entries[id];
       var found=0;
-      var re=new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi');
+      var re=new RegExp(regexEscape(q),'gi');
       var hits=(e.description||'').match(re);if(hits)found+=hits.length;
       (e.triggers||[]).forEach(function(t){var th=t.toLowerCase().indexOf(q);if(th!==-1)found++;});
       if(found){matches+=found;entryCount++;}
@@ -899,7 +899,7 @@ function launchMobile(){
     var find=searchInp.value.trim();
     var repl=replaceInp.value;
     if(!find)return;
-    var re=new RegExp(find.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi');
+    var re=new RegExp(regexEscape(find),'gi');
     var changed=0;
     entryOrder.forEach(function(id){
       var e=entries[id];
@@ -1434,9 +1434,7 @@ function launchMobile(){
     // Heading 1 = lorebook name, Heading 2 = entry name, Normal = body text
     var lbName=nameInp.value.trim()||'My Lorebook';
 
-    function esc(s){
-      return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-    }
+    function esc(s){return escHtml(s).replace(/"/g,'&quot;');}
     function para(text,style){
       return '<w:p><w:pPr><w:pStyle w:val="'+style+'"/></w:pPr><w:r><w:t xml:space="preserve">'+esc(text)+'</w:t></w:r></w:p>';
     }
@@ -1851,8 +1849,7 @@ function launchMobile(){
       lbSaveIndex(idx);currentLBKey=key;loadState({name:'',entries:[]});updateEmpty();
     }else{
       currentLBKey=targetKey;
-      var idx=lbIndex();var slot=idx.find(function(x){return x.key===targetKey;});
-      if(slot){idx=[slot].concat(idx.filter(function(x){return x.key!==targetKey;}));lbSaveIndex(idx);}
+      lbMoveToFront(targetKey);
       try{var sv=localStorage.getItem(targetKey);if(sv){loadState(JSON.parse(sv));}else{loadState({name:'',entries:[]});updateEmpty();}}
       catch(e){loadState({name:'',entries:[]});updateEmpty();}
     }
