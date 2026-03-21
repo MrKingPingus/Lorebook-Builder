@@ -703,6 +703,23 @@ function lbDownloadDOCX(state,filename,okEl){
   }catch(err){if(okEl){okEl.textContent='Export error: '+err.message;setTimeout(function(){okEl.textContent='';},4000);}}
 }
 
+// ── Shared state persistence ──
+// Platforms define their own getState()/loadState() but share the storage layer.
+
+function lbSaveState(key,state){
+  if(!key)return;
+  try{
+    localStorage.setItem(key,JSON.stringify(state));
+    var idx=lbIndex();var slot=idx.find(function(x){return x.key===key;});
+    if(slot){slot.name=state.name||'Untitled';slot.ts=state.ts;}
+    lbSaveIndex(idx);
+  }catch(e){}
+}
+
+function lbLoadState(key){
+  try{var raw=key&&localStorage.getItem(key);return raw?JSON.parse(raw):null;}catch(e){return null;}
+}
+
 // ── MOBILE UI ──────────────────────────────────────────────────────────────
 function launchMobile(){
   if(document.getElementById('_lbm_app'))return;
@@ -1194,14 +1211,11 @@ function launchMobile(){
     return{name:nameInp.value.trim(),entries:entryOrder.map(function(id){return entries[id];}),ts:Date.now()};
   }
   function saveNow(){
-    try{
-      var state=getState();localStorage.setItem(currentLBKey,JSON.stringify(state));
-      var idx=lbIndex();var slot=idx.find(function(x){return x.key===currentLBKey;});
-      if(slot){slot.name=state.name||'Untitled';slot.ts=state.ts;}lbSaveIndex(idx);
-      updLBBtn();
-      saveBadge.classList.add('show');clearTimeout(saveBadge._t);
-      saveBadge._t=setTimeout(function(){saveBadge.classList.remove('show');},1800);
-    }catch(e){}
+    var state=getState();
+    lbSaveState(currentLBKey,state);
+    updLBBtn();
+    saveBadge.classList.add('show');clearTimeout(saveBadge._t);
+    saveBadge._t=setTimeout(function(){saveBadge.classList.remove('show');},1800);
   }
   function scheduleSave(){clearTimeout(saveTimer);saveTimer=setTimeout(saveNow,400);}
   window.addEventListener('beforeunload',function(){saveNow();});
@@ -2053,11 +2067,9 @@ function launchMobile(){
   }
 
   currentLBKey=lbEnsureKey(currentLBKey);updLBBtn();
-  try{
-    var saved=localStorage.getItem(currentLBKey);
-    if(saved){var parsed=JSON.parse(saved);if(parsed.name||(parsed.entries&&parsed.entries.length>0)){loadState(parsed);}else{updateEmpty();}}
-    else{updateEmpty();}
-  }catch(e){updateEmpty();}
+  var _initState=lbLoadState(currentLBKey);
+  if(_initState&&(_initState.name||(_initState.entries&&_initState.entries.length>0))){loadState(_initState);}
+  else{updateEmpty();}
 
   var lbSheet=document.createElement('div');lbSheet.id='_lbm_lb_sheet';
   var lbSheetHd=document.createElement('div');lbSheetHd.id='_lbm_lb_sheet_hd';
@@ -2140,8 +2152,8 @@ function launchMobile(){
     }else{
       currentLBKey=targetKey;
       lbMoveToFront(targetKey);
-      try{var sv=localStorage.getItem(targetKey);if(sv){loadState(JSON.parse(sv));}else{loadState({name:'',entries:[]});updateEmpty();}}
-      catch(e){loadState({name:'',entries:[]});updateEmpty();}
+      var sv=lbLoadState(targetKey);
+      if(sv){loadState(sv);}else{loadState({name:'',entries:[]});updateEmpty();}
     }
     updLBBtn();switchTab('build');
   }
@@ -2614,15 +2626,11 @@ function launchBuilder(){
   }
   function saveNow(){
     if(!currentLBKey)return;
-    try{
-      var state=getState();
-      localStorage.setItem(currentLBKey,JSON.stringify(state));
-      var idx=lbIndex();var slot=idx.find(function(x){return x.key===currentLBKey;});
-      if(slot){slot.name=state.name||'Untitled';slot.ts=state.ts;}lbSaveIndex(idx);
-      updLBCount();
-      var b=document.getElementById('_lb_savebadge');
-      if(b){b.classList.add('_show');clearTimeout(b._t);b._t=setTimeout(function(){b.classList.remove('_show');},1800);}
-    }catch(e){}
+    var state=getState();
+    lbSaveState(currentLBKey,state);
+    updLBCount();
+    var b=document.getElementById('_lb_savebadge');
+    if(b){b.classList.add('_show');clearTimeout(b._t);b._t=setTimeout(function(){b.classList.remove('_show');},1800);}
   }
   function scheduleSave(){clearTimeout(saveTimer);saveTimer=setTimeout(saveNow,900);}
   window.addEventListener('beforeunload',function(){saveNow();});
@@ -3268,14 +3276,9 @@ function launchBuilder(){
 
   currentLBKey=lbEnsureKey(null);
   updLBCount();
-  try{
-    var saved=currentLBKey&&localStorage.getItem(currentLBKey);
-    if(saved){
-      var parsed=JSON.parse(saved);
-      if(parsed.name||(parsed.entries&&parsed.entries.length>0)){loadState(parsed);}
-      else{addEntry();}
-    } else {addEntry();}
-  }catch(e){addEntry();}
+  var _initState=lbLoadState(currentLBKey);
+  if(_initState&&(_initState.name||(_initState.entries&&_initState.entries.length>0))){loadState(_initState);}
+  else{addEntry();}
 
   // Desktop lorebook switcher dropdown
   var lbSwitchBtn=document.createElement('button');
@@ -3378,10 +3381,8 @@ function launchBuilder(){
     } else {
       currentLBKey=targetKey;
       lbMoveToFront(targetKey);
-      try{
-        var sv=localStorage.getItem(targetKey);
-        if(sv){loadState(JSON.parse(sv));}else{loadState({name:'',entries:[]});addEntry();}
-      }catch(e){loadState({name:'',entries:[]});addEntry();}
+      var sv=lbLoadState(targetKey);
+      if(sv){loadState(sv);}else{loadState({name:'',entries:[]});addEntry();}
     }
     updLBCount();switchTab('build');
   }

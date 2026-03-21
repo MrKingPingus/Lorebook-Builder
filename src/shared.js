@@ -251,4 +251,21 @@ function lbDownloadDOCX(state,filename,okEl){
   }catch(err){if(okEl){okEl.textContent='Export error: '+err.message;setTimeout(function(){okEl.textContent='';},4000);}}
 }
 
+// ── Shared state persistence ──
+// Platforms define their own getState()/loadState() but share the storage layer.
+
+function lbSaveState(key,state){
+  if(!key)return;
+  try{
+    localStorage.setItem(key,JSON.stringify(state));
+    var idx=lbIndex();var slot=idx.find(function(x){return x.key===key;});
+    if(slot){slot.name=state.name||'Untitled';slot.ts=state.ts;}
+    lbSaveIndex(idx);
+  }catch(e){}
+}
+
+function lbLoadState(key){
+  try{var raw=key&&localStorage.getItem(key);return raw?JSON.parse(raw):null;}catch(e){return null;}
+}
+
 // ── MOBILE UI ──────────────────────────────────────────────────────────────

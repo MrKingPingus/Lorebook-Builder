@@ -39,14 +39,9 @@
 
   currentLBKey=lbEnsureKey(null);
   updLBCount();
-  try{
-    var saved=currentLBKey&&localStorage.getItem(currentLBKey);
-    if(saved){
-      var parsed=JSON.parse(saved);
-      if(parsed.name||(parsed.entries&&parsed.entries.length>0)){loadState(parsed);}
-      else{addEntry();}
-    } else {addEntry();}
-  }catch(e){addEntry();}
+  var _initState=lbLoadState(currentLBKey);
+  if(_initState&&(_initState.name||(_initState.entries&&_initState.entries.length>0))){loadState(_initState);}
+  else{addEntry();}
 
   // Desktop lorebook switcher dropdown
   var lbSwitchBtn=document.createElement('button');
@@ -149,10 +144,8 @@
     } else {
       currentLBKey=targetKey;
       lbMoveToFront(targetKey);
-      try{
-        var sv=localStorage.getItem(targetKey);
-        if(sv){loadState(JSON.parse(sv));}else{loadState({name:'',entries:[]});addEntry();}
-      }catch(e){loadState({name:'',entries:[]});addEntry();}
+      var sv=lbLoadState(targetKey);
+      if(sv){loadState(sv);}else{loadState({name:'',entries:[]});addEntry();}
     }
     updLBCount();switchTab('build');
   }

@@ -13,14 +13,11 @@
     return{name:nameInp.value.trim(),entries:entryOrder.map(function(id){return entries[id];}),ts:Date.now()};
   }
   function saveNow(){
-    try{
-      var state=getState();localStorage.setItem(currentLBKey,JSON.stringify(state));
-      var idx=lbIndex();var slot=idx.find(function(x){return x.key===currentLBKey;});
-      if(slot){slot.name=state.name||'Untitled';slot.ts=state.ts;}lbSaveIndex(idx);
-      updLBBtn();
-      saveBadge.classList.add('show');clearTimeout(saveBadge._t);
-      saveBadge._t=setTimeout(function(){saveBadge.classList.remove('show');},1800);
-    }catch(e){}
+    var state=getState();
+    lbSaveState(currentLBKey,state);
+    updLBBtn();
+    saveBadge.classList.add('show');clearTimeout(saveBadge._t);
+    saveBadge._t=setTimeout(function(){saveBadge.classList.remove('show');},1800);
   }
   function scheduleSave(){clearTimeout(saveTimer);saveTimer=setTimeout(saveNow,400);}
   window.addEventListener('beforeunload',function(){saveNow();});

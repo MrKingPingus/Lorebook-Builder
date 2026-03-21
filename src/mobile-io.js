@@ -171,11 +171,9 @@
   }
 
   currentLBKey=lbEnsureKey(currentLBKey);updLBBtn();
-  try{
-    var saved=localStorage.getItem(currentLBKey);
-    if(saved){var parsed=JSON.parse(saved);if(parsed.name||(parsed.entries&&parsed.entries.length>0)){loadState(parsed);}else{updateEmpty();}}
-    else{updateEmpty();}
-  }catch(e){updateEmpty();}
+  var _initState=lbLoadState(currentLBKey);
+  if(_initState&&(_initState.name||(_initState.entries&&_initState.entries.length>0))){loadState(_initState);}
+  else{updateEmpty();}
 
   var lbSheet=document.createElement('div');lbSheet.id='_lbm_lb_sheet';
   var lbSheetHd=document.createElement('div');lbSheetHd.id='_lbm_lb_sheet_hd';
@@ -258,8 +256,8 @@
     }else{
       currentLBKey=targetKey;
       lbMoveToFront(targetKey);
-      try{var sv=localStorage.getItem(targetKey);if(sv){loadState(JSON.parse(sv));}else{loadState({name:'',entries:[]});updateEmpty();}}
-      catch(e){loadState({name:'',entries:[]});updateEmpty();}
+      var sv=lbLoadState(targetKey);
+      if(sv){loadState(sv);}else{loadState({name:'',entries:[]});updateEmpty();}
     }
     updLBBtn();switchTab('build');
   }

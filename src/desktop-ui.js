@@ -462,15 +462,11 @@ function launchBuilder(){
   }
   function saveNow(){
     if(!currentLBKey)return;
-    try{
-      var state=getState();
-      localStorage.setItem(currentLBKey,JSON.stringify(state));
-      var idx=lbIndex();var slot=idx.find(function(x){return x.key===currentLBKey;});
-      if(slot){slot.name=state.name||'Untitled';slot.ts=state.ts;}lbSaveIndex(idx);
-      updLBCount();
-      var b=document.getElementById('_lb_savebadge');
-      if(b){b.classList.add('_show');clearTimeout(b._t);b._t=setTimeout(function(){b.classList.remove('_show');},1800);}
-    }catch(e){}
+    var state=getState();
+    lbSaveState(currentLBKey,state);
+    updLBCount();
+    var b=document.getElementById('_lb_savebadge');
+    if(b){b.classList.add('_show');clearTimeout(b._t);b._t=setTimeout(function(){b.classList.remove('_show');},1800);}
   }
   function scheduleSave(){clearTimeout(saveTimer);saveTimer=setTimeout(saveNow,900);}
   window.addEventListener('beforeunload',function(){saveNow();});
