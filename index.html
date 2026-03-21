@@ -1180,6 +1180,8 @@ function launchMobile(){
   app.appendChild(hd);app.appendChild(body);app.appendChild(nav);app.appendChild(fab);app.appendChild(editor);
   document.body.appendChild(app);
 
+  // ── MOBILE: Entry State & Card Rendering ─────────────────────────────────
+
   var HL_MARK='background:#fef08a;color:#111827;border-radius:2px;padding:0 1px';
   var entries={};
   var entryOrder=[];
@@ -1427,6 +1429,8 @@ function launchMobile(){
     replaceAllBtn.textContent='Done ✓';
     setTimeout(function(){replaceAllBtn.textContent='Replace All';updMatchCount();},1500);
   });
+
+  // ── MOBILE: Entry Editor ─────────────────────────────────────────────────
 
   function openEditor(id){
     currentEditId=id;
@@ -1876,6 +1880,8 @@ function launchMobile(){
     setTimeout(function(){removeEntry(id);},250);
   });
 
+
+  // ── MOBILE: Import/Export, Lorebook Switching & Navigation ───────────────
   var panels={build:pBuild,impexp:pConv,settings:pSettings};
   function switchTab(t){
     closeFabMenu();
@@ -2141,6 +2147,7 @@ function launchMobile(){
   }
 
 }
+
 
 
 // ── DESKTOP BUILDER ────────────────────────────────────────────────────────

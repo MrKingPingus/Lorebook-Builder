@@ -23,7 +23,10 @@ set -e
   cat src/mobile.css
   printf '`;\n'
   cat src/shared.js
-  cat src/mobile.js
+  cat src/mobile-ui.js
+  cat src/mobile-entries.js
+  cat src/mobile-editor.js
+  cat src/mobile-io.js
   cat src/desktop-ui.js
   cat src/desktop-entries.js
   cat src/desktop-search.js
