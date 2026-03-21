@@ -24,7 +24,10 @@ set -e
   printf '`;\n'
   cat src/shared.js
   cat src/mobile.js
-  cat src/desktop.js
+  cat src/desktop-ui.js
+  cat src/desktop-entries.js
+  cat src/desktop-search.js
+  cat src/desktop-io.js
   printf '\n'
   cat src/init.js
   printf '</script>\n</body>\n</html>\n'

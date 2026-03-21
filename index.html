@@ -2633,6 +2633,7 @@ function launchBuilder(){
   }
 
 
+  // ── DESKTOP: Entry Factory ──────────────────────────────────────────────────
   var ec=0;
   function mkEntry(data){
     var d=data||{};
@@ -3095,6 +3096,7 @@ function launchBuilder(){
     });
   }
 
+  // ── DESKTOP: Search, Filter & Find-Replace ──────────────────────────────────
   var HL_MARK='background:#fef08a;color:#111827;border-radius:2px;padding:0 1px';
   function applyFilter(){
     var q=searchInp.value.trim().toLowerCase();
@@ -3219,6 +3221,7 @@ function launchBuilder(){
     renumberEntries();scheduleSave();
   });
 
+  // ── DESKTOP: Import/Export, Lorebook Switching & Event Wiring ───────────────
   function parseImportText(text){
     text=text.replace(/\r\n/g,'\n').replace(/\r/g,'\n').replace(/\*\*/g,'');
     var blocks=[];var TRIPLE=/^===\s*.+\s*===/;var KV_NAME=/^(?:Entry\s+)?(?:Name|Title|Label)\s*:/i;
@@ -3558,6 +3561,7 @@ function launchBuilder(){
   }
   document.addEventListener('keydown',hotkeyHandler);
 }
+
 
 document.getElementById('_lb_mobile_open').addEventListener('click',function(){
   document.getElementById('_lb_install').style.display='none';
