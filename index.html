@@ -2557,7 +2557,7 @@ function launchBuilder(){
   // Reset window button
   var rstBox=document.createElement('div');rstBox.className='_lb_section_box';
   var rstBtn=document.createElement('button');rstBtn.className='_lb_btn _lb_btns';rstBtn.textContent='Reset window to default size';
-  rstBtn.addEventListener('click',function(e){e.stopPropagation();applyDefaultSize();});
+  rstBtn.addEventListener('click',function(e){e.stopPropagation();applyDefaultSize();try{localStorage.removeItem('_lb_window_pos');}catch(e){}});
   rstBox.appendChild(rstBtn);setBox.appendChild(rstBox);
 
   pSettings.appendChild(setBox);
@@ -2638,7 +2638,6 @@ function launchBuilder(){
       bx.style.left=Math.round((vw-nw)/2)+'px';bx.style.top=Math.round((vh-nh)/2)+'px';
       bx.style.width=nw+'px';bx.style.height=nh+'px';
       bx.style.borderRadius='8px';bx.style.boxShadow='0 8px 40px rgba(0,0,0,.6)';bx.style.border='1px solid #374151';
-      try{localStorage.removeItem('_lb_window_pos');}catch(e){}
     }
     [['_tl','nw'],['_tr','ne'],['_bl','sw'],['_br','se']].forEach(function(cfg){
       var c=document.createElement('div');c.className='_lb_corner '+cfg[0];
@@ -2674,17 +2673,20 @@ function launchBuilder(){
   bx.appendChild(hd);bx.appendChild(searchFilterBar);bx.appendChild(bd);bx.appendChild(ft);bx.appendChild(resizeHandle);if(IS_MOBILE)bx.appendChild(fab);
   if(IS_MOBILE){document.body.appendChild(bx);}else{
     document.body.appendChild(bx);
-    applyDefaultSize();
+    var _sizeRestored=false;
     try{
       var _p=JSON.parse(localStorage.getItem('_lb_window_pos')||'null');
-      if(_p&&_p.w>=480&&_p.h>=320){
+      if(_p&&_p.w>=MIN_W&&_p.h>=MIN_H){
         var _vw=window.innerWidth,_vh=window.innerHeight;
         var _pw=Math.max(MIN_W,Math.min(_p.w,_vw)),_ph=Math.max(MIN_H,Math.min(_p.h,_vh));
         bx._desiredW=_pw;bx._desiredH=_ph;
         bx.style.left=Math.round((_vw-_pw)/2)+'px';bx.style.top=Math.round((_vh-_ph)/2)+'px';
         bx.style.width=_pw+'px';bx.style.height=_ph+'px';
+        bx.style.borderRadius='8px';bx.style.boxShadow='0 8px 40px rgba(0,0,0,.6)';bx.style.border='1px solid #374151';
+        _sizeRestored=true;
       }
     }catch(e){}
+    if(!_sizeRestored)applyDefaultSize();
     window.addEventListener('resize',function(){
       var vw=window.innerWidth,vh=window.innerHeight;
       var dw=bx._desiredW||bx.offsetWidth,dh=bx._desiredH||bx.offsetHeight;
