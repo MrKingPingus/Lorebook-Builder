@@ -407,7 +407,7 @@ function launchBuilder(){
   hkInp.addEventListener('input',function(){
     var v=hkInp.value.replace(/[^a-zA-Z]/g,'');
     hkInp.value=v.toUpperCase();
-    if(v.length===1){window._lb_hotkey_new=v.toLowerCase();try{localStorage.setItem('_lb_hotkey_new',v.toLowerCase());}catch(e){}hotkeyHint.textContent='Alt+'+v.toUpperCase()+' — new entry';}
+    if(v.length===1){window._lb_hotkey_new=v.toLowerCase();try{localStorage.setItem('_lb_hotkey_new',v.toLowerCase());}catch(e){}hotkeyHint.textContent='Alt+'+v.toUpperCase()+'\u2014add entry';}
   });
   hkInp.addEventListener('focus',function(){hkInp.style.borderColor='#ef4444';});
   hkInp.addEventListener('blur',function(){hkInp.style.borderColor='#374151';if(!hkInp.value){hkInp.value=window._lb_hotkey_new.toUpperCase();}});
@@ -449,8 +449,9 @@ function launchBuilder(){
   var ft=document.createElement('div');ft.id='_lb_ft';
   var clrBtn=document.createElement('button');clrBtn.className='_lb_btn _lb_btns';clrBtn.textContent='Clear All';
   var hotkeyHint=document.createElement('span');hotkeyHint.id='_lb_hotkey_hint';hotkeyHint.textContent='Alt+'+(window._lb_hotkey_new||'n').toUpperCase()+'—add entry';hotkeyHint.style.cssText='font-size:.68rem;color:#6b7280;white-space:nowrap';
+  var ftLeft=document.createElement('div');ftLeft.style.cssText='display:flex;align-items:center;gap:10px';
+  ftLeft.appendChild(clrBtn);if(!IS_MOBILE)ftLeft.appendChild(hotkeyHint);
   var rfr=document.createElement('div');rfr.style.cssText='display:flex;align-items:center;gap:8px';
-  if(!IS_MOBILE){var addEntryWrap=document.createElement('div');addEntryWrap.style.cssText='display:flex;flex-direction:column;align-items:center;gap:1px';addEntryWrap.appendChild(aeBtn);addEntryWrap.appendChild(hotkeyHint);rfr.appendChild(addEntryWrap);}
   undoBtn=document.createElement('button');undoBtn.className='_lb_btn _lb_btns';undoBtn.title='Undo (Ctrl+Z / Cmd+Z)';undoBtn.textContent='\u21a9 Undo';undoBtn.disabled=true;if(IS_MOBILE)undoBtn.style.display='none';
   redoBtn=document.createElement('button');redoBtn.className='_lb_btn _lb_btns';redoBtn.title='Redo (Ctrl+Shift+Z / Cmd+Shift+Z)';redoBtn.textContent='\u21aa Redo';redoBtn.disabled=true;if(IS_MOBILE)redoBtn.style.display='none';
   undoBtn.addEventListener('click',function(e){e.stopPropagation();doUndo();});
@@ -508,7 +509,9 @@ function launchBuilder(){
     setTimeout(function(){ta.focus();},50);
   });
   rfr.appendChild(importEntriesBtn);
-  ft.appendChild(clrBtn);ft.appendChild(rfr);
+  ft.appendChild(ftLeft);
+  if(!IS_MOBILE){var deskFab=document.createElement('button');deskFab.style.cssText='width:46px;height:46px;border-radius:50%;background:#ef4444;border:none;color:#fff;font-size:1.6rem;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(0,0,0,.4);position:absolute;left:50%;transform:translateX(-50%);flex-shrink:0';deskFab.textContent='+';deskFab.title='Add Entry';deskFab.addEventListener('click',function(e){e.stopPropagation();addEntryAndFocus();});ft.appendChild(deskFab);}
+  ft.appendChild(rfr);
 
 
   var resizeHandle=document.createElement('div');resizeHandle.id='_lb_resize';resizeHandle.textContent='⤡';if(IS_MOBILE)resizeHandle.style.display='none';
