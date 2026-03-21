@@ -2124,7 +2124,9 @@ function launchBuilder(){
   +'._lb_inp:focus,._lb_ta:focus{border-color:#ef4444}'
   +'._lb_sel{width:100%;background:#111827;border:1px solid #374151;border-radius:6px;color:#e5e7eb;padding:7px 10px;font-size:.87rem;outline:none;font-family:system-ui,sans-serif;box-sizing:border-box;cursor:pointer}'
   +'._lb_sel:focus{border-color:#ef4444}'
-  +'._lb_ta{resize:none;min-height:70px;overflow:hidden}'
+  +'._lb_ta{resize:none;min-height:70px;overflow:hidden;background:transparent!important;position:relative;z-index:1;line-height:1.5}'
+  +'._lb_desc_hl_wrap{position:relative}'
+  +'._lb_desc_hl{position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;overflow:hidden;color:transparent;white-space:pre-wrap;word-wrap:break-word;word-break:break-word;box-sizing:border-box;padding:7px 10px;font-size:.87rem;font-family:system-ui,sans-serif;line-height:1.5;border:1px solid transparent;border-radius:6px;background:#111827;z-index:0}'
   +'._lb_ta_tab{display:flex;justify-content:center;align-items:center;cursor:ns-resize;padding:3px 0;user-select:none}'
   +'._lb_ta_tab::before{content:"";width:36px;height:4px;background:#374151;border-radius:2px;transition:background .15s}'
   +'._lb_ta_tab:hover::before{background:#6b7280}'
@@ -2849,6 +2851,19 @@ function launchBuilder(){
     });
 
     var descTA=document.createElement('textarea');descTA.className='_lb_ta';descTA.placeholder='Describe this entry...';descTA.value=d.description||'';
+    var descHlDiv=document.createElement('div');descHlDiv.className='_lb_desc_hl';
+    var descHlWrap=document.createElement('div');descHlWrap.className='_lb_desc_hl_wrap';
+    descHlWrap.appendChild(descHlDiv);descHlWrap.appendChild(descTA);
+    function syncDescHl(q){
+      var text=descTA.value;
+      var safe=text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      if(q&&text.toLowerCase().indexOf(q)!==-1){
+        var esc=q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+        safe=safe.replace(new RegExp('('+esc+')','gi'),'<mark style="background:#fef08a;border-radius:2px">$1</mark>');
+      }
+      descHlDiv.innerHTML=safe+' ';
+    }
+    el._syncDescHl=syncDescHl;
     function autoGrow(){descTA.style.height='auto';descTA.style.height=Math.max(descTA._minH||70,descTA.scrollHeight)+'px';}
     setTimeout(autoGrow,0);
     var descTab=document.createElement('div');descTab.className='_lb_ta_tab';
@@ -2865,7 +2880,7 @@ function launchBuilder(){
     var descWrap=document.createElement('div');descWrap.className='_lb_full';
     var dLbl=document.createElement('label');dLbl.className='_lb_lbl';dLbl.textContent='Description';
     var dNote=document.createElement('span');dNote.style.cssText='text-transform:none;letter-spacing:0;font-weight:400;color:#4b5563';dNote.textContent=' (1500 char limit)';
-    dLbl.appendChild(dNote);descWrap.appendChild(dLbl);descWrap.appendChild(descTA);descWrap.appendChild(descTab);descWrap.appendChild(cc);
+    dLbl.appendChild(dNote);descWrap.appendChild(dLbl);descWrap.appendChild(descHlWrap);descWrap.appendChild(descTab);descWrap.appendChild(cc);
 
     var trigFieldWrap=document.createElement('div');
     var trigLbl=document.createElement('label');trigLbl.className='_lb_lbl';trigLbl.textContent='Trigger Keywords';
@@ -3085,7 +3100,7 @@ function launchBuilder(){
       typeS.selectedIndex=next;
       updEnum();sugOffset=0;renderSugs();scheduleSave();applyFilter();
     },{passive:false});
-    descTA.addEventListener('input',function(){autoGrow();updCC();sugOffset=0;renderSugs();scheduleSave();});
+    descTA.addEventListener('input',function(){autoGrow();updCC();sugOffset=0;renderSugs();scheduleSave();var curQ=searchInp.value.trim().toLowerCase();if(curQ)syncDescHl(curQ);});
 
     delBtn.addEventListener('click',function(e){e.stopPropagation();el.remove();scheduleSave();});
     colBtn.addEventListener('click',function(e){e.stopPropagation();var c=el.classList.toggle('_lb_collapsed');colBtn.textContent=c?'▼ Expand':'▲ Collapse';});
@@ -3152,11 +3167,9 @@ function launchBuilder(){
           lbl.textContent=orig;
         }
       });
-      // highlight description textarea border
-      var descTA=el.querySelector('._lb_ta');
-      if(descTA){
-        var descMatch=hlRe&&el.classList.contains('_lb_search_match')&&desc.indexOf(q)!==-1;
-        descTA.style.borderColor=descMatch?'#fef08a':'';
+      // highlight description text via overlay
+      if(el._syncDescHl){
+        el._syncDescHl(hlRe&&el.classList.contains('_lb_search_match')?q:'');
       }
     });
     updMatchCount();
