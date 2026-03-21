@@ -442,6 +442,16 @@
 
     delBtn.addEventListener('click',function(e){e.stopPropagation();pushUndo();el.remove();scheduleSave();});
     colBtn.addEventListener('click',function(e){e.stopPropagation();var c=el.classList.toggle('_lb_collapsed');colBtn.textContent=c?'▼ Expand':'▲ Collapse';if(!c)setTimeout(autoGrow,0);});
+    // Double-click the header bar to expand a collapsed entry
+    ehead.addEventListener('dblclick',function(){
+      if(el.classList.contains('_lb_collapsed')){el.classList.remove('_lb_collapsed');colBtn.textContent='▲ Collapse';setTimeout(autoGrow,0);}
+    });
+    // Double-click a non-interactive area inside the body to collapse
+    ebody.addEventListener('dblclick',function(e){
+      var t=e.target;
+      if(t.tagName==='INPUT'||t.tagName==='TEXTAREA'||t.tagName==='SELECT'||t.tagName==='BUTTON'||t.tagName==='A')return;
+      if(!el.classList.contains('_lb_collapsed')){el.classList.add('_lb_collapsed');colBtn.textContent='▼ Expand';}
+    });
     return el;
   }
 

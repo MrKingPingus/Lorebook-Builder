@@ -260,6 +260,7 @@
     if(p.lorebookName)document.getElementById('_lb_nm').value=p.lorebookName;
     eDiv.innerHTML='';ec=0;
     p.entries.forEach(function(entry){eDiv.appendChild(mkEntry(entry));});
+    renumberEntries();
     previewDiv.style.display='none';importPreviewBtn.style.display='none';
     scheduleSave();
     switchTab('build');

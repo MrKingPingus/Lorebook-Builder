@@ -203,6 +203,8 @@ var _DESKTOP_CSS = `
 ._lb_section_box{background:#111827;border:1px solid #374151;border-radius:10px;padding:14px;margin-bottom:16px}
 ._lb_section_desc{font-size:.8rem;color:#6b7280;margin:0 0 10px;line-height:1.5}
 #_lb_fab{display:none;position:fixed;bottom:80px;right:18px;width:52px;height:52px;border-radius:50%;background:#ef4444;border:none;color:#fff;font-size:1.6rem;cursor:pointer;align-items:center;justify-content:center;z-index:2147483648;box-shadow:0 4px 12px rgba(0,0,0,.4);}
+@keyframes _lb_flank_in{from{opacity:0;transform:scale(.5)}to{opacity:1;transform:scale(1)}}
+._lb_btns_flanking{animation:_lb_flank_in .18s ease-out;width:34px!important;height:34px!important;padding:0!important;border-radius:8px!important;font-size:1rem!important;display:flex!important;align-items:center!important;justify-content:center!important;}
 @media(max-width:700px){#_lb_bx{position:fixed;top:0;left:0;width:100vw!important;max-width:100vw!important;height:100vh!important;border-radius:0;transform:none!important;overflow-x:hidden!important;}
 #_lb_hd{cursor:default;padding:10px 12px;flex-wrap:wrap;gap:6px;}
 #_lb_hd h2{font-size:.8rem;}
@@ -1845,7 +1847,7 @@ function launchMobile(){
       }
     }
     updCC();
-    descTA.addEventListener('input',function(){autoGrow();e.description=descTA.value.trim();updCC();sugOffset=0;renderSugs();scheduleSave();var _q=searchInp.value.trim().toLowerCase();var _e=_q?regexEscape(_q):'';syncDescHl(_e?new RegExp('('+_e+')','gi'):null);});
+    descTA.addEventListener('input',function(){autoGrow();e.description=descTA.value.trim();updateCard(id);updCC();sugOffset=0;renderSugs();scheduleSave();var _q=searchInp.value.trim().toLowerCase();var _e=_q?regexEscape(_q):'';syncDescHl(_e?new RegExp('('+_e+')','gi'):null);});
     var descWrap=document.createElement('div');descWrap.className='_lbm_field';
     var descLbl=document.createElement('label');descLbl.className='_lbm_label';descLbl.textContent='Description (1500 char limit)';
     descWrap.appendChild(descLbl);descWrap.appendChild(descHlWrap);descWrap.appendChild(descTab);descWrap.appendChild(cc);
@@ -2541,6 +2543,72 @@ function launchBuilder(){
   if(!IS_MOBILE){var deskFab=document.createElement('button');deskFab.style.cssText='width:46px;height:46px;border-radius:50%;background:#ef4444;border:none;color:#fff;font-size:1.6rem;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(0,0,0,.4);position:absolute;left:50%;transform:translateX(-50%);flex-shrink:0';deskFab.textContent='+';deskFab.title='Add Entry (Alt+'+(window._lb_hotkey_new||'n').toUpperCase()+')';deskFab.addEventListener('click',function(e){e.stopPropagation();addEntryAndFocus();});ft.appendChild(deskFab);}
   ft.appendChild(rfr);
 
+  // ── Undo/Redo FAB flanking ─────────────────────────────────────────────────
+  // When the window is narrow enough that the undo button approaches a FAB
+  // element (either #_lb_fab on mobile, or the footer deskFab on desktop),
+  // pop the pair into fixed positions flanking the FAB.  If even that is too
+  // cramped they disappear — keyboard shortcuts Ctrl+Z / Ctrl+Y still work.
+  function _lbSyncUndoRedoLayout(){
+    if(!undoBtn||!redoBtn||IS_MOBILE)return;
+    function _restore(){
+      if(!undoBtn._lbFlanking)return;
+      undoBtn._lbFlanking=false;
+      undoBtn.classList.remove('_lb_btns_flanking');redoBtn.classList.remove('_lb_btns_flanking');
+      undoBtn.style.cssText='';redoBtn.style.cssText='';
+      undoBtn.textContent='\u21a9 Undo';redoBtn.textContent='\u21aa Redo';
+      undoBtn.disabled=!undoStack.length;redoBtn.disabled=!redoStack.length;
+    }
+    // Determine which FAB to reference.
+    // Case A: the fixed mobile FAB (#_lb_fab) — exists in DOM only when IS_MOBILE=true,
+    //         but guard anyway in case of edge cases.
+    // Case B: the deskFab (the centred "+" in the footer) — present on desktop.
+    //         When the footer wraps to two rows at very narrow widths, this absolute-
+    //         positioned button can overlap the undo/redo row.
+    var fabEl=document.getElementById('_lb_fab');
+    var mobileVisible=fabEl&&window.getComputedStyle(fabEl).display!=='none';
+    var deskVisible=typeof deskFab!=='undefined'&&deskFab&&deskFab.offsetParent!==null;
+    if(!mobileVisible&&!deskVisible){_restore();return;}
+    var undoRect=undoBtn.getBoundingClientRect();
+    // Pick the FAB whose left edge is closest to the undo button's right edge
+    var fabLeftEdge=mobileVisible?(window.innerWidth-70):Infinity;
+    var dfRect=deskVisible?deskFab.getBoundingClientRect():null;
+    var dfLeftEdge=dfRect?dfRect.left:Infinity;
+    var useFixed=mobileVisible&&(fabLeftEdge<=dfLeftEdge);
+    var triggerEdge=useFixed?fabLeftEdge:dfLeftEdge;
+    if(undoRect.right<triggerEdge-10){_restore();return;}
+    // Flanking: check if the undo fixed position would collide with Clear All
+    var clrRect=clrBtn.getBoundingClientRect();
+    var undoFlankLeft=window.innerWidth-112; // right:78px + approx width:34px
+    if(undoFlankLeft<clrRect.right+10){
+      if(!undoBtn._lbFlanking){undoBtn._lbFlanking=true;}
+      undoBtn.style.display='none';redoBtn.style.display='none';return;
+    }
+    if(!undoBtn._lbFlanking){
+      undoBtn._lbFlanking=true;
+      undoBtn.classList.add('_lb_btns_flanking');redoBtn.classList.add('_lb_btns_flanking');
+      undoBtn.textContent='\u21a9';redoBtn.textContent='\u21aa';
+    }
+    undoBtn.style.display='flex';redoBtn.style.display='flex';
+    // Position the pair flanking the chosen FAB.
+    // Undo: left of FAB (8px gap from FAB left edge).
+    // Redo: right of FAB (sits at the FAB's right edge / overlaps the corner
+    //       at a higher z-index, creating a deliberate cluster feel).
+    var zi='2147483649';
+    if(useFixed){
+      // #_lb_fab is CSS-fixed: right:18px bottom:80px width:52px height:52px
+      undoBtn.style.cssText='position:fixed;right:78px;bottom:89px;z-index:'+zi;
+      redoBtn.style.cssText='position:fixed;right:4px;bottom:89px;z-index:'+zi;
+    } else if(dfRect){
+      // deskFab is in the footer flow; anchor relative to its live position
+      var btnH=34;
+      var anchorBottom=window.innerHeight-dfRect.bottom+(dfRect.height-btnH)/2;
+      var leftOfFab=window.innerWidth-dfRect.left+8;
+      var rightOfFab=Math.max(4,window.innerWidth-dfRect.right-8-btnH);
+      undoBtn.style.cssText='position:fixed;right:'+leftOfFab+'px;bottom:'+anchorBottom+'px;z-index:'+zi;
+      redoBtn.style.cssText='position:fixed;right:'+rightOfFab+'px;bottom:'+anchorBottom+'px;z-index:'+zi;
+    }
+  }
+  window.addEventListener('resize',_lbSyncUndoRedoLayout);
 
   var resizeHandle=document.createElement('div');resizeHandle.id='_lb_resize';resizeHandle.textContent='⤡';if(IS_MOBILE)resizeHandle.style.display='none';
   var fab=document.createElement('button');fab.id='_lb_fab';fab.textContent='+';fab.title='New entry (mobile)';
@@ -2591,6 +2659,7 @@ function launchBuilder(){
   }
 
   bx.appendChild(hd);bx.appendChild(searchFilterBar);bx.appendChild(bd);bx.appendChild(ft);bx.appendChild(resizeHandle);if(IS_MOBILE)bx.appendChild(fab);
+  setTimeout(_lbSyncUndoRedoLayout,0);
   if(IS_MOBILE){document.body.appendChild(bx);}else{
     document.body.appendChild(bx);
     var _sizeRestored=false;
