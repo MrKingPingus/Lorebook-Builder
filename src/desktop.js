@@ -33,7 +33,7 @@ function launchBuilder(){
   +'#_lb_bd{padding:9px 16px 16px;overflow-y:auto;flex:1;min-height:0}'
   +'#_lb_resize{display:none}'
   +'#_lb_resize:hover{color:#9ca3af}'
-  +'#_lb_hotkey_hint{font-size:.68rem;color:#374151;position:absolute;left:50%;transform:translateX(-50%);white-space:nowrap;pointer-events:none}'
+  +'#_lb_hotkey_hint{display:none}'
   +'._lb_pnl{display:none}'
   +'._lb_pnl._on{display:block}'
   +'._lb_lbl{display:block;font-size:.7rem;color:#6b7280;margin-bottom:3px;text-transform:uppercase;letter-spacing:.05em}'
@@ -376,6 +376,7 @@ function launchBuilder(){
     });
     row.appendChild(info);row.appendChild(tog);wrap.appendChild(row);return wrap;
   }
+  var deskFab;
 
   // Load settings
   try{var s_tc=localStorage.getItem('_lb_tiered_counter');window._lb_tiered_counter=(s_tc===null)?true:(s_tc==='1');}catch(e){window._lb_tiered_counter=true;}
@@ -388,7 +389,7 @@ function launchBuilder(){
   setBox.appendChild(mkDeskToggle('Tiered character counter','Green 0–750 · Yellow 750–1250 · Red 1250–1500. Turn off for a simple red-at-1500 warning.','_lb_tiered_counter'));
   setBox.appendChild(mkDeskToggle('Compact trigger input','Use a single text field for triggers instead of individual tag chips.','_lb_compact_triggers',function(){loadState(getState());}));
   setBox.appendChild(mkDeskToggle('Hide suggestions by default','Start with the Trigger Word Suggestions tray collapsed.','_lb_sugs_collapsed',function(){eDiv.querySelectorAll('._lb_sug_tray').forEach(function(t){if(t._setCollapsed)t._setCollapsed(!!window._lb_sugs_collapsed);});}));
-  setBox.appendChild(mkDeskToggle('Hide entry stats','Hide the trigger count and character count from collapsed entry headers.','_lb_hide_stats'));
+  setBox.appendChild(mkDeskToggle('Hide entry stats','Hide the trigger count and character count from collapsed entry headers.','_lb_hide_stats',function(){eDiv.querySelectorAll('._lb_entry').forEach(function(el){if(el._updStats)el._updStats();});}));
   setBox.appendChild(mkDeskToggle('Expand entries on open','Show all entries expanded when opening the builder. By default entries start collapsed.','_lb_expand_default'));
 
   // Hotkey setting
@@ -407,7 +408,7 @@ function launchBuilder(){
   hkInp.addEventListener('input',function(){
     var v=hkInp.value.replace(/[^a-zA-Z]/g,'');
     hkInp.value=v.toUpperCase();
-    if(v.length===1){window._lb_hotkey_new=v.toLowerCase();try{localStorage.setItem('_lb_hotkey_new',v.toLowerCase());}catch(e){}hotkeyHint.textContent='Alt+'+v.toUpperCase()+'\u2014add entry';}
+    if(v.length===1){window._lb_hotkey_new=v.toLowerCase();try{localStorage.setItem('_lb_hotkey_new',v.toLowerCase());}catch(e){}if(deskFab)deskFab.title='Add Entry (Alt+'+v.toUpperCase()+')';}
   });
   hkInp.addEventListener('focus',function(){hkInp.style.borderColor='#ef4444';});
   hkInp.addEventListener('blur',function(){hkInp.style.borderColor='#374151';if(!hkInp.value){hkInp.value=window._lb_hotkey_new.toUpperCase();}});
@@ -448,12 +449,11 @@ function launchBuilder(){
   var undoBtn,redoBtn;
   var ft=document.createElement('div');ft.id='_lb_ft';
   var clrBtn=document.createElement('button');clrBtn.className='_lb_btn _lb_btns';clrBtn.textContent='Clear All';
-  var hotkeyHint=document.createElement('span');hotkeyHint.id='_lb_hotkey_hint';hotkeyHint.textContent='Alt+'+(window._lb_hotkey_new||'n').toUpperCase()+'—add entry';hotkeyHint.style.cssText='font-size:.68rem;color:#6b7280;white-space:nowrap';
   var ftLeft=document.createElement('div');ftLeft.style.cssText='display:flex;align-items:center;gap:10px';
-  ftLeft.appendChild(clrBtn);if(!IS_MOBILE)ftLeft.appendChild(hotkeyHint);
+  ftLeft.appendChild(clrBtn);
   var rfr=document.createElement('div');rfr.style.cssText='display:flex;align-items:center;gap:8px';
   undoBtn=document.createElement('button');undoBtn.className='_lb_btn _lb_btns';undoBtn.title='Undo (Ctrl+Z / Cmd+Z)';undoBtn.textContent='\u21a9 Undo';undoBtn.disabled=true;if(IS_MOBILE)undoBtn.style.display='none';
-  redoBtn=document.createElement('button');redoBtn.className='_lb_btn _lb_btns';redoBtn.title='Redo (Ctrl+Shift+Z / Cmd+Shift+Z)';redoBtn.textContent='\u21aa Redo';redoBtn.disabled=true;if(IS_MOBILE)redoBtn.style.display='none';
+  redoBtn=document.createElement('button');redoBtn.className='_lb_btn _lb_btns';redoBtn.title='Redo (Ctrl+Y)';redoBtn.textContent='\u21aa Redo';redoBtn.disabled=true;if(IS_MOBILE)redoBtn.style.display='none';
   undoBtn.addEventListener('click',function(e){e.stopPropagation();doUndo();});
   redoBtn.addEventListener('click',function(e){e.stopPropagation();doRedo();});
   rfr.appendChild(undoBtn);rfr.appendChild(redoBtn);
@@ -510,7 +510,7 @@ function launchBuilder(){
   });
   rfr.appendChild(importEntriesBtn);
   ft.appendChild(ftLeft);
-  if(!IS_MOBILE){var deskFab=document.createElement('button');deskFab.style.cssText='width:46px;height:46px;border-radius:50%;background:#ef4444;border:none;color:#fff;font-size:1.6rem;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(0,0,0,.4);position:absolute;left:50%;transform:translateX(-50%);flex-shrink:0';deskFab.textContent='+';deskFab.title='Add Entry';deskFab.addEventListener('click',function(e){e.stopPropagation();addEntryAndFocus();});ft.appendChild(deskFab);}
+  if(!IS_MOBILE){var deskFab=document.createElement('button');deskFab.style.cssText='width:46px;height:46px;border-radius:50%;background:#ef4444;border:none;color:#fff;font-size:1.6rem;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(0,0,0,.4);position:absolute;left:50%;transform:translateX(-50%);flex-shrink:0';deskFab.textContent='+';deskFab.title='Add Entry (Alt+'+(window._lb_hotkey_new||'n').toUpperCase()+')';deskFab.addEventListener('click',function(e){e.stopPropagation();addEntryAndFocus();});ft.appendChild(deskFab);}
   ft.appendChild(rfr);
 
 
@@ -667,6 +667,7 @@ function launchBuilder(){
       eStat1.textContent=tc+'/25 trg';eStat1.style.color=sc(tc,25);
       eStat2.textContent=dc+'/1500 chr';eStat2.style.color=sc(dc,1500);
     }
+    el._updStats=updStats;
 
     var ebody=document.createElement('div');ebody.className='_lb_ebody';
     var grid=document.createElement('div');grid.className='_lb_grid';
