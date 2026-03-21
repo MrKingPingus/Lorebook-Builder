@@ -164,4 +164,91 @@ function lbMoveToFront(key){
   if(slot)lbSaveIndex([slot].concat(idx.filter(function(x){return x.key!==key;})));
 }
 
+// ── Shared export builders ──
+// All take a state object: {name:string, entries:[{name,type,triggers,description,delim},...]}
+
+function lbBuildJSON(state){
+  var name=state.name||'Untitled Lorebook';
+  var result={name:name,entries:{}};
+  state.entries.forEach(function(e,i){result.entries[String(i+1)]=e;});
+  return JSON.stringify(result,null,4);
+}
+
+function lbBuildTXT(state){
+  var lines=['LOREBOOK: '+(state.name||'My Lorebook'),''];
+  state.entries.forEach(function(e){
+    lines.push('=== '+e.name+' ===');
+    lines.push('Type: '+e.type);
+    if(e.triggers&&e.triggers.length){var sep=e.delim===';'?'; ':',';lines.push('Triggers: '+e.triggers.join(sep));}
+    if(e.description)lines.push('Description: '+e.description);
+    lines.push('');
+  });
+  return lines.join('\n');
+}
+
+// ── Shared ZIP builder (pure JS, no external deps) ──
+
+function _lbU32(n){return[n&0xff,(n>>8)&0xff,(n>>16)&0xff,(n>>24)&0xff];}
+function _lbU16(n){return[n&0xff,(n>>8)&0xff];}
+function _lbCrc32(bytes){var c=0xFFFFFFFF,t;for(var i=0;i<bytes.length;i++){t=(c^bytes[i])&0xff;for(var j=0;j<8;j++){t=t&1?(t>>>1)^0xEDB88320:(t>>>1);}c=(c>>>8)^t;}return(c^0xFFFFFFFF)>>>0;}
+
+function lbBuildZip(files){
+  var enc=new TextEncoder();var localHeaders=[];var centralDir=[];var offset=0;
+  files.forEach(function(f){
+    var nameBytes=enc.encode(f.name);var data=f.data;var crc=_lbCrc32(data);var sz=data.length;
+    var lh=[0x50,0x4B,0x03,0x04,0x14,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00].concat(_lbU32(crc)).concat(_lbU32(sz)).concat(_lbU32(sz)).concat(_lbU16(nameBytes.length)).concat(_lbU16(0));
+    var lhBytes=new Uint8Array(lh.length+nameBytes.length+sz);lhBytes.set(lh,0);lhBytes.set(nameBytes,lh.length);lhBytes.set(data,lh.length+nameBytes.length);localHeaders.push(lhBytes);
+    var cd=[0x50,0x4B,0x01,0x02,0x14,0x00,0x14,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00].concat(_lbU32(crc)).concat(_lbU32(sz)).concat(_lbU32(sz)).concat(_lbU16(nameBytes.length)).concat(_lbU16(0)).concat(_lbU16(0)).concat(_lbU16(0)).concat(_lbU16(0)).concat(_lbU32(0)).concat(_lbU32(offset));
+    var cdBytes=new Uint8Array(cd.length+nameBytes.length);cdBytes.set(cd,0);cdBytes.set(nameBytes,cd.length);centralDir.push(cdBytes);
+    offset+=lhBytes.length;
+  });
+  var cdSize=centralDir.reduce(function(a,b){return a+b.length;},0);
+  var eocd=[0x50,0x4B,0x05,0x06,0x00,0x00,0x00,0x00].concat(_lbU16(files.length)).concat(_lbU16(files.length)).concat(_lbU32(cdSize)).concat(_lbU32(offset)).concat(_lbU16(0));
+  var total=offset+cdSize+eocd.length;var out=new Uint8Array(total);var pos=0;
+  localHeaders.forEach(function(b){out.set(b,pos);pos+=b.length;});
+  centralDir.forEach(function(b){out.set(b,pos);pos+=b.length;});
+  out.set(new Uint8Array(eocd),pos);
+  return out;
+}
+
+// ── Shared DOCX builder ──
+
+function lbBuildDOCXParts(state){
+  var lbName=state.name||'My Lorebook';
+  function esc(s){return escHtml(s).replace(/"/g,'&quot;');}
+  function para(text,style){return'<w:p><w:pPr><w:pStyle w:val="'+style+'"/></w:pPr><w:r><w:t xml:space="preserve">'+esc(text)+'</w:t></w:r></w:p>';}
+  function boldPara(label,value){if(!value)return'';return'<w:p><w:r><w:rPr><w:b/></w:rPr><w:t xml:space="preserve">'+esc(label)+'</w:t></w:r><w:r><w:t xml:space="preserve"> '+esc(value)+'</w:t></w:r></w:p>';}
+  function emptyPara(){return'<w:p><w:r><w:t></w:t></w:r></w:p>';}
+  var bodyXML=para(lbName,'Heading1')+emptyPara();
+  state.entries.forEach(function(e){
+    bodyXML+=para(e.name,'Heading2');bodyXML+=boldPara('Type:',e.type);
+    if(e.triggers&&e.triggers.length){var sep=e.delim===';'?'; ':',';bodyXML+=boldPara('Triggers:',e.triggers.join(sep));}
+    if(e.description){bodyXML+='<w:p><w:r><w:rPr><w:b/></w:rPr><w:t>Description:</w:t></w:r></w:p>';e.description.split('\n').forEach(function(line){bodyXML+=para(line,'Normal');});}
+    bodyXML+=emptyPara();
+  });
+  var docXML='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:wpc="http://schemas.microsoft.com/office/word/2010/wordprocessingCanvas" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>'+bodyXML+'<w:sectPr><w:pgSz w:w="12240" w:h="15840"/></w:sectPr></w:body></w:document>';
+  var stylesXML='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/><w:rPr><w:sz w:val="24"/></w:rPr></w:style><w:style w:type="paragraph" w:styleId="Heading1"><w:name w:val="heading 1"/><w:basedOn w:val="Normal"/><w:pPr><w:outlineLvl w:val="0"/></w:pPr><w:rPr><w:b/><w:sz w:val="40"/><w:color w:val="C0392B"/></w:rPr></w:style><w:style w:type="paragraph" w:styleId="Heading2"><w:name w:val="heading 2"/><w:basedOn w:val="Normal"/><w:pPr><w:outlineLvl w:val="1"/></w:pPr><w:rPr><w:b/><w:sz w:val="32"/><w:color w:val="2C3E50"/></w:rPr></w:style></w:styles>';
+  var relsXML='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>';
+  var docRelsXML='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>';
+  var contentTypesXML='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/></Types>';
+  return{docXML:docXML,stylesXML:stylesXML,relsXML:relsXML,docRelsXML:docRelsXML,contentTypesXML:contentTypesXML};
+}
+
+function lbDownloadDOCX(state,filename,okEl){
+  var parts=lbBuildDOCXParts(state);
+  var enc=new TextEncoder();
+  try{
+    var zip=lbBuildZip([
+      {name:'[Content_Types].xml',data:enc.encode(parts.contentTypesXML)},
+      {name:'_rels/.rels',data:enc.encode(parts.docRelsXML)},
+      {name:'word/document.xml',data:enc.encode(parts.docXML)},
+      {name:'word/styles.xml',data:enc.encode(parts.stylesXML)},
+      {name:'word/_rels/document.xml.rels',data:enc.encode(parts.relsXML)},
+    ]);
+    var blob=new Blob([zip],{type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
+    var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;a.click();
+    if(okEl){okEl.textContent='\u2713 Downloaded!';setTimeout(function(){okEl.textContent='';},2000);}
+  }catch(err){if(okEl){okEl.textContent='Export error: '+err.message;setTimeout(function(){okEl.textContent='';},4000);}}
+}
+
 // ── MOBILE UI ──────────────────────────────────────────────────────────────

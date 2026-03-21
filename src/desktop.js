@@ -1383,12 +1383,7 @@ function launchBuilder(){
   ni.addEventListener('input',function(){resizeNi();scheduleSave();});
   setTimeout(resizeNi,0);
 
-  function buildJSON(){
-    var name=document.getElementById('_lb_nm').value.trim()||'Untitled Lorebook';
-    var entries={};var i=1;
-    eDiv.querySelectorAll('._lb_entry').forEach(function(el){if(el._gd){entries[String(i)]=el._gd();i++;}});
-    return JSON.stringify({name:name,entries:entries},null,4);
-  }
+  function buildJSON(){return lbBuildJSON(getState());}
 
   genBtn.addEventListener('click',function(e){e.stopPropagation();jout.value=buildJSON();});
   cpyBtn.addEventListener('click',function(e){
@@ -1535,67 +1530,8 @@ function launchBuilder(){
 
 
 
-  function buildTXT(){
-    var state=getState();
-    var lines=['LOREBOOK: '+(state.name||'My Lorebook'),''];
-    state.entries.forEach(function(e){
-      lines.push('=== '+e.name+' ===');
-      lines.push('Type: '+e.type);
-      if(e.triggers&&e.triggers.length){var sep=e.delim===';'?'; ':',';lines.push('Triggers: '+e.triggers.join(sep));}
-      if(e.description)lines.push('Description: '+e.description);
-      lines.push('');
-    });
-    return lines.join('\n');
-  }
-  function _dsk_u32(n){return[n&0xff,(n>>8)&0xff,(n>>16)&0xff,(n>>24)&0xff];}
-  function _dsk_u16(n){return[n&0xff,(n>>8)&0xff];}
-  function _dsk_crc32(bytes){var c=0xFFFFFFFF,t;for(var i=0;i<bytes.length;i++){t=(c^bytes[i])&0xff;for(var j=0;j<8;j++){t=t&1?(t>>>1)^0xEDB88320:(t>>>1);}c=(c>>>8)^t;}return(c^0xFFFFFFFF)>>>0;}
-  function _dsk_buildZip(files){
-    var enc=new TextEncoder();var localHeaders=[];var centralDir=[];var offset=0;
-    files.forEach(function(f){
-      var nameBytes=enc.encode(f.name);var data=f.data;var crc=_dsk_crc32(data);var sz=data.length;
-      var lh=[0x50,0x4B,0x03,0x04,0x14,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00].concat(_dsk_u32(crc)).concat(_dsk_u32(sz)).concat(_dsk_u32(sz)).concat(_dsk_u16(nameBytes.length)).concat(_dsk_u16(0));
-      var lhBytes=new Uint8Array(lh.length+nameBytes.length+sz);lhBytes.set(lh,0);lhBytes.set(nameBytes,lh.length);lhBytes.set(data,lh.length+nameBytes.length);localHeaders.push(lhBytes);
-      var cd=[0x50,0x4B,0x01,0x02,0x14,0x00,0x14,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00].concat(_dsk_u32(crc)).concat(_dsk_u32(sz)).concat(_dsk_u32(sz)).concat(_dsk_u16(nameBytes.length)).concat(_dsk_u16(0)).concat(_dsk_u16(0)).concat(_dsk_u16(0)).concat(_dsk_u16(0)).concat(_dsk_u32(0)).concat(_dsk_u32(offset));
-      var cdBytes=new Uint8Array(cd.length+nameBytes.length);cdBytes.set(cd,0);cdBytes.set(nameBytes,cd.length);centralDir.push(cdBytes);offset+=lhBytes.length;
-    });
-    var cdSize=centralDir.reduce(function(a,b){return a+b.length;},0);
-    var eocd=[0x50,0x4B,0x05,0x06,0x00,0x00,0x00,0x00].concat(_dsk_u16(files.length)).concat(_dsk_u16(files.length)).concat(_dsk_u32(cdSize)).concat(_dsk_u32(offset)).concat(_dsk_u16(0));
-    var total=offset+cdSize+eocd.length;var out=new Uint8Array(total);var pos=0;
-    localHeaders.forEach(function(b){out.set(b,pos);pos+=b.length;});centralDir.forEach(function(b){out.set(b,pos);pos+=b.length;});out.set(new Uint8Array(eocd),pos);return out;
-  }
-  function downloadDOCX(filename,okEl){
-    var state=getState();var lbName=state.name||'My Lorebook';
-    function esc(s){return escHtml(s).replace(/"/g,'&quot;');}
-    function para(text,style){return'<w:p><w:pPr><w:pStyle w:val="'+style+'"/></w:pPr><w:r><w:t xml:space="preserve">'+esc(text)+'</w:t></w:r></w:p>';}
-    function boldPara(label,value){if(!value)return'';return'<w:p><w:r><w:rPr><w:b/></w:rPr><w:t xml:space="preserve">'+esc(label)+'</w:t></w:r><w:r><w:t xml:space="preserve"> '+esc(value)+'</w:t></w:r></w:p>';}
-    function emptyPara(){return'<w:p><w:r><w:t></w:t></w:r></w:p>';}
-    var bodyXML=para(lbName,'Heading1')+emptyPara();
-    state.entries.forEach(function(e){
-      bodyXML+=para(e.name,'Heading2');bodyXML+=boldPara('Type:',e.type);
-      if(e.triggers&&e.triggers.length){var sep=e.delim===';'?'; ':',';bodyXML+=boldPara('Triggers:',e.triggers.join(sep));}
-      if(e.description){bodyXML+='<w:p><w:r><w:rPr><w:b/></w:rPr><w:t>Description:</w:t></w:r></w:p>';e.description.split('\n').forEach(function(line){bodyXML+=para(line,'Normal');});}
-      bodyXML+=emptyPara();
-    });
-    var docXML='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:wpc="http://schemas.microsoft.com/office/word/2010/wordprocessingCanvas" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>'+bodyXML+'<w:sectPr><w:pgSz w:w="12240" w:h="15840"/></w:sectPr></w:body></w:document>';
-    var stylesXML='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/><w:rPr><w:sz w:val="24"/></w:rPr></w:style><w:style w:type="paragraph" w:styleId="Heading1"><w:name w:val="heading 1"/><w:basedOn w:val="Normal"/><w:pPr><w:outlineLvl w:val="0"/></w:pPr><w:rPr><w:b/><w:sz w:val="40"/><w:color w:val="C0392B"/></w:rPr></w:style><w:style w:type="paragraph" w:styleId="Heading2"><w:name w:val="heading 2"/><w:basedOn w:val="Normal"/><w:pPr><w:outlineLvl w:val="1"/></w:pPr><w:rPr><w:b/><w:sz w:val="32"/><w:color w:val="2C3E50"/></w:rPr></w:style></w:styles>';
-    var relsXML='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>';
-    var docRelsXML='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>';
-    var contentTypesXML='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/></Types>';
-    var enc=new TextEncoder();
-    try{
-      var zip=_dsk_buildZip([
-        {name:'[Content_Types].xml',data:enc.encode(contentTypesXML)},
-        {name:'_rels/.rels',data:enc.encode(docRelsXML)},
-        {name:'word/document.xml',data:enc.encode(docXML)},
-        {name:'word/styles.xml',data:enc.encode(stylesXML)},
-        {name:'word/_rels/document.xml.rels',data:enc.encode(relsXML)},
-      ]);
-      var blob=new Blob([zip],{type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
-      var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;a.click();
-      if(okEl){okEl.textContent='\u2713 Downloaded!';setTimeout(function(){okEl.textContent='';},2000);}
-    }catch(err){if(okEl){okEl.textContent='Export error: '+err.message;setTimeout(function(){okEl.textContent='';},4000);}}
-  }
+  function buildTXT(){return lbBuildTXT(getState());}
+  function downloadDOCX(filename,okEl){lbDownloadDOCX(getState(),filename,okEl);}
 
   function hotkeyHandler(e){
     var isMac=(navigator.platform||navigator.userAgentData&&navigator.userAgentData.platform||'').toLowerCase().indexOf('mac')!==-1;
