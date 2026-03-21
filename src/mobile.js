@@ -95,7 +95,10 @@ function launchMobile(){
     '._lbm_label{display:block;font-size:.72rem;color:#64748b;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}',
     '._lbm_inp,._lbm_ta{width:100%;background:#1e293b;border:1px solid #334155;border-radius:8px;color:#e5e7eb;padding:12px;font-size:16px;outline:none;font-family:system-ui,sans-serif}',
     '._lbm_inp:focus,._lbm_ta:focus{border-color:#f87171}',
-    '._lbm_ta{resize:none;min-height:120px;line-height:1.6;overflow:hidden}',
+    '._lbm_ta{resize:none;min-height:120px;line-height:1.6;overflow:hidden;background:transparent!important;position:relative;z-index:1;color:transparent!important;caret-color:#e5e7eb}',
+    '._lbm_ta::placeholder{color:#4b5563}',
+    '._lbm_desc_hl_wrap{position:relative}',
+    '._lbm_desc_hl{position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;overflow:hidden;color:#e5e7eb;white-space:pre-wrap;word-wrap:break-word;word-break:break-word;box-sizing:border-box;padding:12px;font-size:16px;font-family:system-ui,sans-serif;line-height:1.6;border:1px solid transparent;border-radius:8px;background:#1e293b;z-index:0}',
     '._lbm_ta_tab{display:flex;justify-content:center;align-items:center;cursor:ns-resize;padding:4px 0;user-select:none;touch-action:none}',
     '._lbm_ta_tab::before{content:"";width:40px;height:4px;background:#334155;border-radius:2px;transition:background .15s}',
     '._lbm_ta_tab:active::before{background:#64748b}',
@@ -179,7 +182,7 @@ function launchMobile(){
     '#_lbm_replace_all{flex-shrink:0;padding:9px 14px;border-radius:8px;border:none;background:#ef4444;color:#fff;font-size:.82rem;font-weight:600;cursor:pointer;font-family:system-ui,sans-serif;white-space:nowrap}',
     '#_lbm_replace_all:disabled{background:#374151;color:#6b7280;cursor:default}',
     '#_lbm_match_count{font-size:.72rem;color:#475569;padding:0 2px}',
-    '._lbm_card_name mark{background:#854d0e;color:#fef3c7;border-radius:2px;padding:0 1px}',
+    '._lbm_card_name mark{background:#fef08a;color:#111827;border-radius:2px;padding:0 1px}',
     '#_lbm_fab_menu{position:fixed;border-radius:14px;background:#1e293b;border:1px solid #334155;box-shadow:0 8px 32px rgba(0,0,0,.5);overflow:hidden;z-index:2147483649;opacity:0;transform:scale(.92) translateY(8px);transition:opacity .15s,transform .15s;pointer-events:none}',
     '#_lbm_fab_menu.open{opacity:1;transform:scale(1) translateY(0);pointer-events:all}',
     '._lbm_fab_item{display:flex;align-items:center;gap:12px;padding:14px 18px;cursor:pointer;font-size:.9rem;color:#e5e7eb;font-family:system-ui,sans-serif;border:none;background:none;width:100%;text-align:left;white-space:nowrap}',
@@ -696,10 +699,12 @@ function launchMobile(){
   app.appendChild(hd);app.appendChild(body);app.appendChild(nav);app.appendChild(fab);app.appendChild(editor);
   document.body.appendChild(app);
 
+  var HL_MARK='background:#fef08a;color:#111827;border-radius:2px;padding:0 1px';
   var entries={};
   var entryOrder=[];
   var nextId=1;
   var currentEditId=null;
+  var currentSyncDescHl=null;
   var saveTimer=null;
 
   function getState(){
@@ -837,14 +842,25 @@ function launchMobile(){
       // Highlight match in card name
       if(card._name){
         if(q&&searchOk&&!isFnR){
-          var raw=e.name||'Untitled entry';
-          var re=new RegExp('('+regexEscape(q)+')','gi');
-          card._name.innerHTML=raw.replace(re,'<mark>$1</mark>');
+          var hlRe=new RegExp('('+regexEscape(q)+')','gi');
+          card._name.innerHTML=escHtml(e.name||'Untitled entry').replace(hlRe,'<mark style="'+HL_MARK+'">$1</mark>');
         } else {
           card._name.textContent=e.name||'Untitled entry';
         }
       }
     });
+    // Sync description highlight overlay in the open editor
+    if(currentSyncDescHl){
+      var esc2=q?regexEscape(q):'';
+      var hlRe2=esc2?new RegExp('('+esc2+')','gi'):null;
+      var openEntry=currentEditId?entries[currentEditId]:null;
+      var openMatch=openEntry&&hlRe2&&(
+        (openEntry.name||'').toLowerCase().indexOf(q)!==-1||
+        (openEntry.description||'').toLowerCase().indexOf(q)!==-1||
+        (openEntry.triggers||[]).join(' ').toLowerCase().indexOf(q)!==-1
+      );
+      currentSyncDescHl(openMatch?hlRe2:null);
+    }
     renumber();
     updMatchCount();
   }
@@ -1301,6 +1317,12 @@ function launchMobile(){
 
     var descTA=document.createElement('textarea');descTA.className='_lbm_ta';
     descTA.placeholder='Describe this entry...';descTA.value=e.description;
+    var descHlDiv=document.createElement('div');descHlDiv.className='_lbm_desc_hl';
+    var descHlWrap=document.createElement('div');descHlWrap.className='_lbm_desc_hl_wrap';
+    descHlWrap.appendChild(descHlDiv);descHlWrap.appendChild(descTA);
+    function syncDescHl(re){var safe=escHtml(descTA.value);if(re)safe=safe.replace(re,'<mark style="'+HL_MARK+'">$1</mark>');descHlDiv.innerHTML=safe+' ';}
+    var _iq=searchInp.value.trim().toLowerCase();var _ie=_iq?regexEscape(_iq):'';syncDescHl(_ie?new RegExp('('+_ie+')','gi'):null);
+    currentSyncDescHl=syncDescHl;
     function autoGrow(){descTA.style.height='auto';descTA.style.height=Math.max(descTA._minH||120,descTA.scrollHeight)+'px';}
     setTimeout(autoGrow,0);
     var descTab=document.createElement('div');descTab.className='_lbm_ta_tab';
@@ -1324,10 +1346,10 @@ function launchMobile(){
       }
     }
     updCC();
-    descTA.addEventListener('input',function(){autoGrow();e.description=descTA.value.trim();updCC();sugOffset=0;renderSugs();scheduleSave();});
+    descTA.addEventListener('input',function(){autoGrow();e.description=descTA.value.trim();updCC();sugOffset=0;renderSugs();scheduleSave();var _q=searchInp.value.trim().toLowerCase();var _e=_q?regexEscape(_q):'';syncDescHl(_e?new RegExp('('+_e+')','gi'):null);});
     var descWrap=document.createElement('div');descWrap.className='_lbm_field';
     var descLbl=document.createElement('label');descLbl.className='_lbm_label';descLbl.textContent='Description (1500 char limit)';
-    descWrap.appendChild(descLbl);descWrap.appendChild(descTA);descWrap.appendChild(descTab);descWrap.appendChild(cc);
+    descWrap.appendChild(descLbl);descWrap.appendChild(descHlWrap);descWrap.appendChild(descTab);descWrap.appendChild(cc);
     edBody.appendChild(descWrap);
 
     var moveRow=document.createElement('div');moveRow.id='_lbm_move_row';
@@ -1361,6 +1383,7 @@ function launchMobile(){
   function closeEditor(){
     editor.classList.remove('open');
     currentEditId=null;
+    currentSyncDescHl=null;
   }
 
   backBtn.addEventListener('click',closeEditor);
