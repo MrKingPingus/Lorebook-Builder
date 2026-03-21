@@ -15,6 +15,13 @@ set -e
   printf '</style>\n</head>\n<body>\n'
   cat src/lander.html
   printf '\n<script>\n'
+  # Inject platform CSS as JS variables (template literals)
+  printf 'var _DESKTOP_CSS = `\n'
+  cat src/desktop.css
+  printf '`;\n'
+  printf 'var _MOBILE_CSS = `\n'
+  cat src/mobile.css
+  printf '`;\n'
   cat src/shared.js
   cat src/mobile.js
   cat src/desktop.js
