@@ -199,7 +199,15 @@ function launchBuilder(){
     });
     filterBtns.appendChild(fb);
   });
-  filterBtns.appendChild(groupBtn);filterBtns.appendChild(shiftHint);
+  var colAllBtn=document.createElement('button');colAllBtn.className='_lb_btn _lb_btns';colAllBtn.style.cssText='padding:3px 10px;font-size:.73rem;margin-left:6px';colAllBtn.textContent='Collapse All';
+  colAllBtn.addEventListener('click',function(e){
+    e.stopPropagation();
+    eDiv.querySelectorAll('._lb_entry').forEach(function(el){
+      el.classList.add('_lb_collapsed');
+      var cb=el.querySelector('._lb_ebtn');if(cb)cb.textContent='▼ Expand';
+    });
+  });
+  filterBtns.appendChild(groupBtn);filterBtns.appendChild(colAllBtn);filterBtns.appendChild(shiftHint);
   filterBar.appendChild(filterLabel);filterBar.appendChild(filterBtns);
 
   var aeBtn=document.createElement('button');aeBtn.id='_lb_ae';aeBtn.textContent='+ Add Entry';
@@ -428,7 +436,10 @@ function launchBuilder(){
       prevEl.innerHTML='';prevEl.style.display='block';confBtn.style.display='block';
       parsed.forEach(function(e){
         var row=document.createElement('div');row.style.cssText='padding:5px 0;border-bottom:1px solid #374151;font-size:.78rem';
-        row.innerHTML='<strong style="color:#f87171">'+e.name+'</strong> <span style="color:#6b7280">'+e.type+'</span>'+(e.triggers.length?' <span style="color:#34d399">'+e.triggers.join(', ')+'</span>':'');
+        var parts=[e.type];
+        if(e.triggers.length)parts.push(e.triggers.length+' trigger'+(e.triggers.length!==1?'s':''));
+        if(e.description)parts.push(e.description.length+' char desc');
+        row.innerHTML='<strong style="color:#f87171">'+e.name+'</strong> <span style="color:#6b7280">'+parts.join(' · ')+'</span>';
         prevEl.appendChild(row);
       });
       confBtn._parsed=parsed;
@@ -913,7 +924,7 @@ function launchBuilder(){
     function updEnum(){
       var idx=Array.from(eDiv.querySelectorAll('._lb_entry')).indexOf(el)+1;
       var n=nameI.value.trim();
-      enumEl.textContent='ENTRY #'+idx+(n?': '+n:'');
+      enumEl.textContent='#'+idx+(n?': '+n:'');
       typeDot.style.background=TYPE_COLORS[typeS.value]||'#9ca3af';
       el.dataset.type=typeS.value;
       updStats();
@@ -953,6 +964,7 @@ function launchBuilder(){
     trigI.addEventListener('input',function(){updTrigCounter();scheduleSave();});
     typeS.addEventListener('change',function(){updEnum();sugOffset=0;renderSugs();scheduleSave();applyFilter();});
     typeS.addEventListener('wheel',function(e){
+      if(!e.shiftKey)return;
       e.preventDefault();e.stopPropagation();
       var dir=e.deltaY>0?1:-1;
       var next=(typeS.selectedIndex+dir+TYPES.length)%TYPES.length;
@@ -975,7 +987,7 @@ function launchBuilder(){
       var sel=el.querySelector('._lb_sel');
       if(enumEl){
         var n=inp?inp.value.trim():'';
-        enumEl.textContent='ENTRY #'+(i+1)+(n?': '+n:'');
+        enumEl.textContent='#'+(i+1)+(n?': '+n:'');
       }
       var dot=el.querySelector('._lb_type_dot');
       if(dot&&sel)dot.style.background=TYPE_COLORS[sel.value]||'#9ca3af';
@@ -1001,6 +1013,20 @@ function launchBuilder(){
       }
     });
     updMatchCount();
+    eDiv.querySelectorAll('._lb_entry').forEach(function(el){
+      var enumEl=el.querySelector('._lb_enum');if(!enumEl)return;
+      if(q&&el.classList.contains('_lb_search_match')){
+        var orig=enumEl.textContent;
+        var safe=orig.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        var esc=q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+        enumEl.innerHTML=safe.replace(new RegExp('('+esc+')','gi'),'<mark style="background:#fef08a;color:#111827;border-radius:2px;padding:0 1px">$1</mark>');
+        enumEl.dataset.hl='1';
+      } else if(enumEl.dataset.hl){
+        var t=enumEl.textContent;
+        enumEl.innerHTML=t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        delete enumEl.dataset.hl;
+      }
+    });
   }
   function countMatches(){
     var q=searchInp.value.trim().toLowerCase();
@@ -1039,6 +1065,7 @@ function launchBuilder(){
     }
   });
   replaceInp.addEventListener('input',function(){updMatchCount();});
+  replaceInp.addEventListener('keydown',function(e){if(e.key==='Tab'&&e.shiftKey){e.preventDefault();searchInp.focus();}});
   searchMode.addEventListener('change',function(){
     var isFnR=searchMode.value==='fnr';
     replaceRow.style.display=isFnR?'flex':'none';
