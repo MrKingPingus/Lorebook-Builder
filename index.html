@@ -3179,7 +3179,7 @@ function launchBuilder(){
       typeS.selectedIndex=next;
       updEnum();sugOffset=0;renderSugs();scheduleSave();applyFilter();
     },{passive:false});
-    descTA.addEventListener('input',function(){autoGrow();updCC();sugOffset=0;renderSugs();scheduleSave();var _q=searchInp.value.trim().toLowerCase();var _e=_q?regexEscape(_q):'';syncDescHl(_e?new RegExp('('+_e+')','gi'):null);});
+    descTA.addEventListener('input',function(){autoGrow();updCC();updStats();sugOffset=0;renderSugs();scheduleSave();var _q=searchInp.value.trim().toLowerCase();var _e=_q?regexEscape(_q):'';syncDescHl(_e?new RegExp('('+_e+')','gi'):null);});
 
     delBtn.addEventListener('click',function(e){e.stopPropagation();pushUndo();el.remove();scheduleSave();});
     colBtn.addEventListener('click',function(e){e.stopPropagation();var c=el.classList.toggle('_lb_collapsed');colBtn.textContent=c?'▼ Expand':'▲ Collapse';if(!c)setTimeout(autoGrow,0);});
