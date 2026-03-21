@@ -190,6 +190,7 @@ function launchBuilder(){
   var goBtn=document.createElement('button');goBtn.style.display='none';
   var searchRow=searchWrap;
 
+  try{var s_ed0=localStorage.getItem('_lb_expand_default');window._lb_expand_default=(s_ed0==='1');}catch(e){window._lb_expand_default=false;}
   var filterBar=document.createElement('div');filterBar.id='_lb_filterbar';
   var filterLabel=document.createElement('span');filterLabel.style.cssText='font-size:.7rem;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;flex-shrink:0';filterLabel.textContent='Filter:';
   var filterBtns=document.createElement('div');filterBtns.style.cssText='display:flex;gap:4px;flex-wrap:wrap;align-items:center';
@@ -215,7 +216,7 @@ function launchBuilder(){
     filterBtns.appendChild(fb);
   });
   var groupBtn=document.createElement('button');groupBtn.className='_lb_btn _lb_btns';groupBtn.style.cssText='padding:3px 10px;font-size:.73rem';groupBtn.textContent='Group by type';
-  var colAllBtn=document.createElement('button');colAllBtn.className='_lb_btn _lb_btns';colAllBtn.style.cssText='padding:3px 10px;font-size:.73rem';colAllBtn.textContent='Collapse All';
+  var colAllBtn=document.createElement('button');colAllBtn.className='_lb_btn _lb_btns';colAllBtn.style.cssText='padding:3px 10px;font-size:.73rem';colAllBtn.textContent=window._lb_expand_default?'Collapse All':'Expand All';
   colAllBtn.addEventListener('click',function(e){
     e.stopPropagation();
     var allCollapsed=Array.from(eDiv.querySelectorAll('._lb_entry')).every(function(el){return el.classList.contains('_lb_collapsed');});
@@ -234,8 +235,8 @@ function launchBuilder(){
     }
   });
   var filterRight=document.createElement('div');filterRight.className='_lb_filter_right';
-  filterRight.appendChild(shiftHint);filterRight.appendChild(groupBtn);filterRight.appendChild(colAllBtn);
-  filterBar.appendChild(filterLabel);filterBar.appendChild(filterBtns);filterBar.appendChild(filterRight);
+  filterRight.appendChild(groupBtn);filterRight.appendChild(colAllBtn);
+  filterBar.appendChild(filterLabel);filterBar.appendChild(filterBtns);filterBar.appendChild(shiftHint);filterBar.appendChild(filterRight);
 
   var aeBtn=document.createElement('button');aeBtn.id='_lb_ae';aeBtn.textContent='+ Add Entry';
   pBuild.appendChild(restoreBanner);pBuild.appendChild(nw);pBuild.appendChild(searchRow);pBuild.appendChild(filterBar);pBuild.appendChild(eDiv);pBuild.appendChild(aeBtn);
@@ -366,6 +367,7 @@ function launchBuilder(){
   try{var s_ct=localStorage.getItem('_lb_compact_triggers');window._lb_compact_triggers=(s_ct==='1');}catch(e){window._lb_compact_triggers=false;}
   try{var s_sc=localStorage.getItem('_lb_sugs_collapsed');window._lb_sugs_collapsed=(s_sc==='1');}catch(e){window._lb_sugs_collapsed=false;}
   try{var s_hs=localStorage.getItem('_lb_hide_stats');window._lb_hide_stats=(s_hs==='1');}catch(e){window._lb_hide_stats=false;}
+  try{var s_ed=localStorage.getItem('_lb_expand_default');window._lb_expand_default=(s_ed==='1');}catch(e){window._lb_expand_default=false;}
   try{var s_hk=localStorage.getItem('_lb_hotkey_new');window._lb_hotkey_new=(s_hk&&s_hk.length===1)?s_hk:'n';}catch(e){window._lb_hotkey_new='n';}
   try{var s_ds=localStorage.getItem('_lb_default_size');window._lb_default_size=(s_ds==='fullpage')?'fullpage':'column';}catch(e){window._lb_default_size='column';}
 
@@ -373,6 +375,7 @@ function launchBuilder(){
   setBox.appendChild(mkDeskToggle('Compact trigger input','Use a single text field for triggers instead of individual tag chips.','_lb_compact_triggers'));
   setBox.appendChild(mkDeskToggle('Hide suggestions by default','Start with the Trigger Word Suggestions tray collapsed.','_lb_sugs_collapsed'));
   setBox.appendChild(mkDeskToggle('Hide entry stats','Hide the trigger count and character count from collapsed entry headers.','_lb_hide_stats'));
+  setBox.appendChild(mkDeskToggle('Expand entries on open','Show all entries expanded when opening the builder. By default entries start collapsed.','_lb_expand_default'));
 
   // Hotkey setting
   var hkBox=document.createElement('div');hkBox.className='_lb_section_box';
@@ -592,7 +595,7 @@ function launchBuilder(){
   var ec=0;
   function mkEntry(data){
     var d=data||{};
-    var el=document.createElement('div');el.className='_lb_entry';
+    var el=document.createElement('div');el.className='_lb_entry'+(window._lb_expand_default?'':' _lb_collapsed');
     el.dataset.type=d.type||'Character';
 
     var ehead=document.createElement('div');ehead.className='_lb_ehead';
@@ -615,7 +618,7 @@ function launchBuilder(){
     var eStat2=document.createElement('span');eStat2.style.cssText='font-size:.65rem;font-weight:600;color:#34d399;white-space:nowrap';
     eStatWrap.appendChild(eStat1);eStatWrap.appendChild(eStat2);
     var ebtns=document.createElement('div');ebtns.className='_lb_ebtns';
-    var colBtn=document.createElement('button');colBtn.className='_lb_ebtn';colBtn.textContent='▲ Collapse';
+    var colBtn=document.createElement('button');colBtn.className='_lb_ebtn';colBtn.textContent=window._lb_expand_default?'▲ Collapse':'▼ Expand';
     var delBtn=document.createElement('button');delBtn.className='_lb_ebtn';delBtn.textContent='Remove';
     ebtns.appendChild(eStatWrap);ebtns.appendChild(colBtn);ebtns.appendChild(delBtn);
     eleft.style.flex='1';
