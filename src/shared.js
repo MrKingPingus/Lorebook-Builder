@@ -132,6 +132,10 @@ function getSuggestions(name, type, description) {
 
 
 
+// ── Shared utilities ──
+function regexEscape(s){return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');}
+function escHtml(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
 // ── Shared lorebook storage ──
 var LB_INDEX_KEY='_lorebook_index';
 var LB_MAX=10;
@@ -154,6 +158,10 @@ function lbEnsureKey(currentKey){
   if(legacy){try{var lp=JSON.parse(legacy);name=lp.name||name;localStorage.setItem(key,legacy);}catch(e){}}
   lbSaveIndex([{key:key,name:name,ts:Date.now()}]);
   return key;
+}
+function lbMoveToFront(key){
+  var idx=lbIndex();var slot=idx.find(function(x){return x.key===key;});
+  if(slot)lbSaveIndex([slot].concat(idx.filter(function(x){return x.key!==key;})));
 }
 
 // ── MOBILE UI ──────────────────────────────────────────────────────────────
