@@ -2903,7 +2903,7 @@ function launchBuilder(){
     syncDescHl(null);
     el._syncDescHl=syncDescHl;
     function autoGrow(){descTA.style.height='auto';var h=Math.max(descTA._minH||70,descTA.scrollHeight);descTA.style.height=h+'px';}
-    setTimeout(autoGrow,0);
+    requestAnimationFrame(autoGrow);
     var descTab=document.createElement('div');descTab.className='_lb_ta_tab';
     descTab.addEventListener('mousedown',function(e){
       e.preventDefault();var sy=e.clientY,sh=descTA.offsetHeight;
